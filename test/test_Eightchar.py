@@ -186,9 +186,9 @@ class TestEightChar(unittest.TestCase):
         # 结束年龄
         assert decadeFortune.get_end_age() == 16
         # 开始年
-        assert decadeFortune.get_start_lunar_year().get_year() == 1989
+        assert decadeFortune.get_start_sixty_cycle_year().get_year() == 1989
         # 结束年
-        assert decadeFortune.get_end_lunar_year().get_year() == 1998
+        assert decadeFortune.get_end_sixty_cycle_year().get_year() == 1998
         # 干支
         assert decadeFortune.get_name() == '乙卯'
         # 下一大运
@@ -202,11 +202,11 @@ class TestEightChar(unittest.TestCase):
         # 年龄
         assert fortune.get_age() == 7
         # 农历年
-        assert fortune.get_lunar_year().get_year() == 1989
+        assert fortune.get_sixty_cycle_year().get_year() == 1989
         # 干支
         assert fortune.get_name() == '辛巳'
         # 流年
-        assert fortune.get_lunar_year().get_sixty_cycle().get_name() == '己巳'
+        assert fortune.get_sixty_cycle_year().get_sixty_cycle().get_name() == '己巳'
 
     def test14(self):
         # 童限
@@ -232,9 +232,9 @@ class TestEightChar(unittest.TestCase):
         # 结束年龄
         assert decadeFortune.get_end_age() == 19
         # 开始年
-        assert decadeFortune.get_start_lunar_year().get_year() == 2000
+        assert decadeFortune.get_start_sixty_cycle_year().get_year() == 2001
         # 结束年
-        assert decadeFortune.get_end_lunar_year().get_year() == 2009
+        assert decadeFortune.get_end_sixty_cycle_year().get_year() == 2010
         # 干支
         assert decadeFortune.get_name() == '庚子'
         # 下一大运
@@ -244,14 +244,14 @@ class TestEightChar(unittest.TestCase):
         # 年龄
         assert fortune.get_age() == 10
         # 农历年
-        assert fortune.get_lunar_year().get_year() == 2000
+        assert fortune.get_sixty_cycle_year().get_year() == 2001
         # 干支
         assert fortune.get_name() == '戊申'
         # 小运推移
         assert fortune.next(2).get_name() == '丙午'
         assert fortune.next(-2).get_name() == '庚戌'
         # 流年
-        assert fortune.get_lunar_year().get_sixty_cycle().get_name() == '庚辰'
+        assert fortune.get_sixty_cycle_year().get_sixty_cycle().get_name() == '辛巳'
 
     def test15(self):
         assert SolarTime(2018, 8, 8, 8, 8, 0).get_lunar_hour().get_eight_char().__str__() == '戊戌 庚申 壬申 甲辰'
@@ -308,10 +308,10 @@ class TestEightChar(unittest.TestCase):
         assert LunarHour(1994, 5, 20, 18, 0, 0).get_eight_char().get_own_sign().get_name() == '丙寅'
 
     def test26(self):
-        assert SolarTime(1986, 5, 29, 13, 37, 0).get_lunar_hour().get_eight_char().get_body_sign().get_name() == '己丑'
+        assert SolarTime(1986, 5, 29, 13, 37, 0).get_lunar_hour().get_eight_char().get_body_sign().get_name() == '辛丑'
 
     def test27(self):
-        assert SolarTime(1994, 12, 6, 2, 0, 0).get_lunar_hour().get_eight_char().get_body_sign().get_name() == '乙丑'
+        assert SolarTime(1994, 12, 6, 2, 0, 0).get_lunar_hour().get_eight_char().get_body_sign().get_name() == '丁丑'
 
     def test28(self):
         eight_char: EightChar = EightChar(SixtyCycle('辛亥'), SixtyCycle('丁酉'), SixtyCycle('丙午'), SixtyCycle('癸巳'))

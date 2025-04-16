@@ -9,7 +9,7 @@ from tyme4py.enums import Side
 
 if TYPE_CHECKING:
     from tyme4py.lunar import LunarDay, LunarMonth
-    from tyme4py.sixtycycle import SixtyCycle
+    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleDay
 
 
 class FetusEarthBranch(LoopTyme):
@@ -88,13 +88,20 @@ class FetusDay(AbstractCulture):
     _side: Side
     _direction: Direction
 
-    def __init__(self, lunar_day: LunarDay):
-        sixty_cycle: SixtyCycle = lunar_day.get_sixty_cycle()
+    def __init__(self, sixty_cycle: SixtyCycle):
         self._fetus_heaven_stem = FetusHeavenStem(sixty_cycle.get_heaven_stem().get_index() % 5)
         self._fetus_earth_branch = FetusEarthBranch(sixty_cycle.get_earth_branch().get_index() % 6)
         index: int = [3, 3, 8, 8, 8, 8, 8, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0, -9, -9, -9, -9, -9, -5, -5, -1, -1, -1, -3, -7, -7, -7, -7, -5, 7, 7, 7, 7, 7, 7, 2, 2, 2, 2, 2, 3, 3, 3, 3][sixty_cycle.get_index()]
         self._side = Side.IN if index < 0 else Side.OUT
         self._direction = Direction(index)
+
+    @classmethod
+    def from_lunar_day(cls, lunar_day: LunarDay) -> FetusDay:
+        return cls(lunar_day.get_sixty_cycle())
+
+    @classmethod
+    def from_sixty_cycle_day(cls, sixty_cycle_day: SixtyCycleDay) -> FetusDay:
+        return cls(sixty_cycle_day.get_sixty_cycle())
 
     def get_name(self) -> str:
         s: str = self._fetus_heaven_stem.get_name() + self._fetus_earth_branch.get_name()

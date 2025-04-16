@@ -1,12 +1,22 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
-from tyme4py import LoopTyme, AbstractCulture, AbstractCultureDay
-from tyme4py.culture import Element, Direction, Zodiac, Terrain, Sound, Ten
+from math import floor
+from typing import TYPE_CHECKING
+
+from tyme4py import LoopTyme, AbstractCulture, AbstractCultureDay, AbstractTyme
+from tyme4py.culture import Element, Direction, Zodiac, Terrain, Sound, Ten, Twenty, Duty, God, Taboo
+from tyme4py.culture.fetus import FetusDay
 from tyme4py.culture.pengzu import PengZuEarthBranch, PengZuHeavenStem, PengZu
+from tyme4py.culture.star.nine import NineStar
 from tyme4py.culture.star.ten import TenStar
+from tyme4py.culture.star.twelve import TwelveStar
+from tyme4py.eightchar import EightChar
 from tyme4py.enums import YinYang, HideHeavenStemType
 
+if TYPE_CHECKING:
+    from tyme4py.solar import SolarDay, SolarTime
+    from tyme4py.culture.star.twentyeight import TwentyEightStar
 
 class EarthBranch(LoopTyme):
     """地支（地元）"""
@@ -364,3 +374,516 @@ class SixtyCycle(LoopTyme):
         """
         earth_branch: EarthBranch = EarthBranch(10 + self.get_earth_branch().get_index() - self.get_heaven_stem().get_index())
         return [earth_branch, earth_branch.next(1)]
+
+
+class SixtyCycleYear(AbstractTyme):
+    """
+    干支年
+    """
+    _year: int
+
+    def __init__(self, year: int):
+        if year < -1 or year > 9999:
+            raise ValueError(f'illegal sixty cycle year: {year}')
+        self._year = year
+
+    @classmethod
+    def from_year(cls, year: int) -> SixtyCycleYear:
+        return cls(year)
+
+    def get_year(self) -> int:
+        """
+        年
+        :return: 返回为干支年数字，范围为-1到9999。
+        """
+        return self._year
+
+    def get_name(self) -> str:
+        """
+        :return: {六十甲子}年
+        """
+        return f'{self.get_sixty_cycle().get_name()}年'
+
+    def next(self, n: int) -> SixtyCycleYear:
+        return SixtyCycleYear(self._year + n)
+
+    def get_sixty_cycle(self) -> SixtyCycle:
+        """
+        干支
+        :return: 干支 SixtyCycle
+        """
+        return SixtyCycle(self._year - 4)
+
+    def get_twenty(self) -> Twenty:
+        """
+        运
+        :return: 返回为运 Twenty。
+        """
+        return Twenty(floor((self._year - 1864) / 20))
+
+    def get_nine_star(self) -> NineStar:
+        """
+        九星
+        :return: 返回为九星 NineStar。
+        """
+        return NineStar(63 + self.get_twenty().get_sixty().get_index() * 3 - self.get_sixty_cycle().get_index())
+
+    def get_jupiter_direction(self) -> Direction:
+        """
+        太岁方位
+        :return: 返回为方位 Direction。
+        """
+        return Direction([0, 7, 7, 2, 3, 3, 8, 1, 1, 6, 0, 0][self.get_sixty_cycle().get_earth_branch().get_index()])
+
+    def get_first_month(self) -> SixtyCycleMonth:
+        """
+        首月（依据五虎遁和正月起寅的规律）
+        :return: 干支月
+        """
+        h: HeavenStem = HeavenStem.from_index((self.get_sixty_cycle().get_heaven_stem().get_index() + 1) * 2)
+        return SixtyCycleMonth(self, SixtyCycle.from_name(f'{h.get_name()}寅'))
+
+    def get_months(self) -> list[SixtyCycleMonth]:
+        """
+        干支月列表
+        :return: 干支月列表
+        """
+        l: [SixtyCycleMonth] = []
+        m: SixtyCycleMonth = self.get_first_month()
+        l.append(m)
+        for i in range(1, 12):
+            l.append(m.next(i))
+        return l
+
+
+class SixtyCycleMonth(AbstractTyme):
+    """
+    干支月
+    """
+    _year: SixtyCycleYear
+    """干支年"""
+    _month: SixtyCycle
+    """月柱"""
+
+    def __init__(self, year: SixtyCycleYear, month: SixtyCycle):
+        """
+        :param year: 干支年
+        :param month: 干支月
+        """
+        self._year = year
+        self._month = month
+
+    @classmethod
+    def from_index(cls, year: int, index: int) -> SixtyCycleMonth:
+        return SixtyCycleYear.from_year(year).get_first_month().next(index)
+
+    def get_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        干支年
+        :return: 干支年
+        """
+        return self._year
+
+    def get_year(self) -> SixtyCycle:
+        """
+        年柱
+        :return: 干支
+        """
+        return self._year.get_sixty_cycle()
+
+    def get_sixty_cycle(self) -> SixtyCycle:
+        """
+        干支
+        :return: 干支
+        """
+        return self._month
+
+    def get_index_in_year(self) -> int:
+        """
+        位于当年的索引(0-11)，寅月为0，依次类推
+        :return: 返回为数字，范围0到11，寅月为0，依次类推。
+        """
+        return self._month.get_earth_branch().next(-2).get_index()
+
+    def get_name(self) -> str:
+        """
+        名称
+        :return: 名称
+        """
+        return f'{self._month}月'
+
+    def __str__(self) -> str:
+        return f'{self._year}{self.get_name()}'
+
+    def next(self, n: int) -> SixtyCycleMonth:
+        return SixtyCycleMonth(SixtyCycleYear.from_year((self._year.get_year()*12 + self.get_index_in_year() + n) // 12), self._month.next(n))
+
+    def get_first_day(self) -> SixtyCycleDay:
+        from tyme4py.solar import SolarTerm
+        return SixtyCycleDay.from_solar_day(SolarTerm.from_index(self._year.get_year(), 3+self.get_index_in_year()*2).get_julian_day().get_solar_day())
+    def get_days(self) -> list[SixtyCycleDay]:
+        """
+        本月的干支日列表
+        :return: 支日列表
+        """
+        l: [SixtyCycleDay] = []
+        d: SixtyCycleDay = self.get_first_day()
+        while d.get_sixty_cycle_month() == self:
+            l.append(d)
+            d = d.next(1)
+        return l
+
+    def get_nine_star(self) -> NineStar:
+        """
+        :return: 九星 NineStar。
+        """
+        index = self._month.get_earth_branch().get_index()
+        if index < 2:
+            index += 3
+        return NineStar(27 - self.get_year().get_earth_branch().get_index() % 3 * 3 - index)
+
+    def get_jupiter_direction(self) -> Direction:
+        """
+        太岁方位
+        :return: 方位 Direction。
+        """
+        n: int = [7, -1, 1, 3][self._month.get_earth_branch().next(-2).get_index() % 4]
+        return self._month.get_heaven_stem().get_direction() if n == -1 else Direction(n)
+
+
+class SixtyCycleDay(AbstractTyme):
+    """干支日"""
+    _solar_day: SolarDay
+    """公历日"""
+    _month: SixtyCycleMonth
+    """干支月"""
+    _day: SixtyCycle
+    """日柱"""
+
+    def __init__(self, solar_day: SolarDay, month: SixtyCycleMonth, day: SixtyCycle):
+        """
+        :param solar_day: 公历年
+        :param month: 干支月
+        :param day: 日柱
+        """
+        self._solar_day = solar_day
+        self._month = month
+        self._day = day
+
+    @classmethod
+    def from_solar_day(cls, solar_day: SolarDay) -> SixtyCycleDay:
+        from tyme4py.solar import SolarTerm, SolarDay
+        from tyme4py.lunar import LunarYear, LunarMonth, LunarDay
+        solar_year: int = solar_day.get_year()
+        spring_solar_day: SolarDay = SolarTerm.from_index(solar_year, 3).get_julian_day().get_solar_day()
+        lunar_day: LunarDay = solar_day.get_lunar_day()
+        lunar_year: LunarYear = lunar_day.get_lunar_month().get_lunar_year()
+        if lunar_year.get_year() == solar_year:
+            if solar_day.is_before(spring_solar_day):
+                lunar_year = lunar_year.next(-1)
+        elif lunar_year.get_year() < solar_year:
+            if not solar_day.is_before(spring_solar_day):
+                lunar_year = lunar_year.next(1)
+        term: SolarTerm = solar_day.get_term()
+        index: int = term.get_index() - 3
+        if index < 0 and term.get_julian_day().get_solar_day().is_after(spring_solar_day):
+            index += 24
+        return cls(solar_day, SixtyCycleMonth(SixtyCycleYear.from_year(lunar_year.get_year()), LunarMonth.from_ym(solar_year, 1).get_sixty_cycle().next(int(floor(index/2)))), lunar_day.get_sixty_cycle())
+
+    def get_solar_day(self) -> SolarDay:
+        """
+        :return: 公历日
+        """
+        return self._solar_day
+
+    def get_sixty_cycle_month(self) -> SixtyCycleMonth:
+        """
+        :return: 干支月
+        """
+        return self._month
+
+    def get_year(self) -> SixtyCycle:
+        """
+        年柱
+        :return: 干支
+        """
+        return self._month.get_year()
+
+    def get_month(self) -> SixtyCycle:
+        """
+        月柱
+        :return: 干支
+        """
+        return self._month.get_sixty_cycle()
+
+    def get_sixty_cycle(self) -> SixtyCycle:
+        """
+        干支
+        :return: 干支
+        """
+        return self._day
+
+    def get_name(self) -> str:
+        return f'{self._day}日'
+
+    def __str__(self) -> str:
+        return f'{self._month}{self.get_name()}'
+
+    def next(self, n: int) -> SixtyCycleDay:
+        return SixtyCycleDay.from_solar_day(self._solar_day.next(n))
+
+    def get_duty(self) -> Duty:
+        """
+        建除十二值神
+        :return: 建除十二值神 Duty。
+        """
+        return Duty(self._day.get_earth_branch().get_index() - self.get_month().get_earth_branch().get_index())
+
+    def get_twelve_star(self) -> TwelveStar:
+        """
+        黄道黑道十二神
+        :return: 黄道黑道十二神 TwelveStar。
+        """
+        return TwelveStar(self._day.get_earth_branch().get_index() + (8 - self.get_month().get_earth_branch().get_index() % 6) * 2)
+
+    def get_nine_star(self) -> NineStar:
+        """
+        九星
+        :return: 九星 NineStar。
+        """
+        from tyme4py.solar import SolarDay, SolarTerm
+        d: SolarDay = self.get_solar_day()
+        dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
+        xia_zhi: SolarTerm = dong_zhi.next(12)
+        dong_zhi2: SolarTerm = dong_zhi.next(24)
+        dong_zhi_solar: SolarDay = dong_zhi.get_julian_day().get_solar_day()
+        xia_zhi_solar: SolarDay = xia_zhi.get_julian_day().get_solar_day()
+        dong_zhi_solar2: SolarDay = dong_zhi2.get_julian_day().get_solar_day()
+        dong_zhi_index: int = dong_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
+        xia_zhi_index: int = xia_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
+        dong_zhi_index2: int = dong_zhi_solar2.get_lunar_day().get_sixty_cycle().get_index()
+        solar_shun_bai: SolarDay = dong_zhi_solar.next(60 - dong_zhi_index if dong_zhi_index > 29 else -dong_zhi_index)
+        solar_shun_bai2: SolarDay = dong_zhi_solar2.next(60 - dong_zhi_index2 if dong_zhi_index2 > 29 else -dong_zhi_index2)
+        solar_ni_zi: SolarDay = xia_zhi_solar.next(60 - xia_zhi_index if xia_zhi_index > 29 else -xia_zhi_index)
+        offset: int = 0
+        if not d.is_before(solar_shun_bai) and d.is_before(solar_ni_zi):
+            offset = d.subtract(solar_shun_bai)
+        elif not d.is_before(solar_ni_zi) and d.is_before(solar_shun_bai2):
+            offset = 8 - d.subtract(solar_ni_zi)
+        elif not d.is_before(solar_shun_bai2):
+            offset = d.subtract(solar_shun_bai2)
+        elif d.is_before(solar_shun_bai):
+            offset = 8 + solar_shun_bai.subtract(d)
+        return NineStar(offset)
+
+    def get_jupiter_direction(self) -> Direction:
+        """
+        太岁方位
+        :return: 方位 Direction。
+        """
+        index: int = self._day.get_index()
+        from tyme4py.culture import Element
+        return Element(index // 12).get_direction() if index % 12 < 6 else self._month.get_sixty_cycle_year().get_jupiter_direction()
+
+    def get_fetus_day(self) -> FetusDay:
+        """
+        逐日胎神
+        :return:逐日胎神 FetusDay。
+        """
+        return FetusDay.from_sixty_cycle_day(self)
+
+    def get_twenty_eight_star(self) -> TwentyEightStar:
+        """
+        二十八宿
+        :return: 二十八宿 TwentyEightStar。
+        """
+        from tyme4py.culture.star.twentyeight import TwentyEightStar
+        return TwentyEightStar([10, 18, 26, 6, 14, 22, 2][self._solar_day.get_week().get_index()]).next(-7 * self._day.get_earth_branch().get_index())
+
+    def get_gods(self) -> list[God]:
+        """
+        神煞列表(吉神宜趋，凶神宜忌)
+        :return: 神煞列表
+        """
+        return God.get_day_gods(self.get_month(), self._day)
+
+    def get_recommends(self) -> list[Taboo]:
+        """
+        今日 宜
+        :return: 宜忌列表
+        """
+        return Taboo.get_day_recommends(self.get_month(), self._day)
+
+    def get_avoids(self) -> list[Taboo]:
+        """
+        今日 忌
+        :return: 宜忌列表
+        """
+        return Taboo.get_day_avoids(self.get_month(), self._day)
+
+    def get_hours(self) -> list[SixtyCycleHour]:
+        """
+        当天的干支时辰列表
+        :return: 干支时辰列表
+        """
+        from tyme4py.solar import SolarDay, SolarTime
+        l: [SixtyCycleHour] = []
+        d: SolarDay = self._solar_day.next(-1)
+        t: SolarTime = SolarTime.from_ymd_hms(d.get_year(), d.get_month(), d.get_day(), 23, 0, 0)
+        h: SixtyCycleHour = SixtyCycleHour.from_solar_time(t)
+        l.append(h)
+        for i in range(0, 11):
+            h = h.next(7200)
+            l.append(h)
+        return l
+
+
+class SixtyCycleHour(AbstractTyme):
+    """
+    干支时辰
+    """
+    _solar_time: SolarTime
+    """公历时刻"""
+    _day: SixtyCycleDay
+    """干支日"""
+    _hour: SixtyCycle
+    """时柱"""
+
+    def __init__(self, solar_time: SolarTime):
+        from tyme4py.solar import SolarTerm, SolarTime
+        from tyme4py.lunar import LunarYear, LunarMonth, LunarDay, LunarHour
+        solar_year: int = solar_time.get_year()
+        spring_solar_time: SolarTime = SolarTerm.from_index(solar_year, 3).get_julian_day().get_solar_time()
+        lunar_hour: LunarHour = solar_time.get_lunar_hour()
+        lunar_day: LunarDay = lunar_hour.get_lunar_day()
+        lunar_year: LunarYear = lunar_day.get_lunar_month().get_lunar_year()
+        if lunar_year.get_year() == solar_year:
+            if solar_time.is_before(spring_solar_time):
+                lunar_year = lunar_year.next(-1)
+        elif lunar_year.get_year() < solar_year:
+            if not solar_time.is_before(spring_solar_time):
+                lunar_year = lunar_year.next(1)
+
+        term: SolarTerm = solar_time.get_term()
+        index: int = term.get_index() - 3
+        if index < 0 and term.get_julian_day().get_solar_time().is_after(SolarTerm.from_index(solar_year, 3).get_julian_day().get_solar_time()):
+            index += 24
+        d: SixtyCycle = lunar_day.get_sixty_cycle()
+        if solar_time.get_hour() == 23:
+            d = d.next(1)
+        y: SixtyCycleYear = SixtyCycleYear.from_year(lunar_year.get_year())
+        m: LunarMonth = LunarMonth.from_ym(solar_year, 1)
+
+        self._solar_time = solar_time
+        self._day = SixtyCycleDay(solar_time.get_solar_day(), SixtyCycleMonth(y, m.get_sixty_cycle().next(int(floor(index / 2)))), d)
+        self._hour = lunar_hour.get_sixty_cycle()
+
+    @classmethod
+    def from_solar_time(cls, solar_time: SolarTime) -> SixtyCycleHour:
+        return cls(solar_time)
+
+    def get_year(self) -> SixtyCycle:
+        """
+        年柱
+        :return: 干支
+        """
+        return self._day.get_year()
+
+    def get_month(self) -> SixtyCycle:
+        """
+        月柱
+        :return: 干支
+        """
+        return self._day.get_month()
+
+    def get_day(self) -> SixtyCycle:
+        """
+        日柱
+        :return: 干支
+        """
+        return self._day.get_sixty_cycle()
+
+    def get_sixty_cycle(self) -> SixtyCycle:
+        """
+        干支
+        :return: 干支
+        """
+        return self._hour
+
+    def get_sixty_cycle_day(self) -> SixtyCycleDay:
+        """
+        干支日
+        :return: 干支日
+        """
+        return self._day
+
+    def get_solar_time(self) -> SolarTime:
+        """
+        公历时刻
+        :return: 公历时刻
+        """
+        return self._solar_time
+
+    def get_name(self) -> str:
+        return f'{self._hour}时'
+
+    def __str__(self) -> str:
+        return f'{self._day}{self.get_name()}'
+
+    def get_index_in_day(self) -> int:
+        """
+        位于当天的索引
+        :return: 位于当天的索引
+        """
+        h: int = self._solar_time.get_hour()
+        if h == 23:
+            return 0
+        return (h + 1) // 2
+
+    def next(self, n: int) -> SixtyCycleHour:
+        return SixtyCycleHour.from_solar_time(self._solar_time.next(n))
+
+    def get_twelve_star(self) -> TwelveStar:
+        """
+        黄道黑道十二神
+        :return: 黄道黑道十二神 TwelveStar。
+        """
+        return TwelveStar(self._hour.get_earth_branch().get_index() + (8 - self.get_day().get_earth_branch().get_index() % 6) * 2)
+
+    def get_nine_star(self) -> NineStar:
+        """
+        九星（时家紫白星歌诀：三元时白最为佳，冬至阳生顺莫差，孟日七宫仲一白，季日四绿发萌芽，每把时辰起甲子，本时星耀照光华，时星移入中宫去，顺飞八方逐细查。夏至阴生逆回首，孟归三碧季加六，仲在九宫时起甲，依然掌中逆轮跨。）
+        :return: 九星 NineStar。
+        """
+        from tyme4py.solar import SolarTerm, SolarDay
+        solar: SolarDay = self._solar_time.get_solar_day()
+        dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
+        xia_zhi: SolarTerm = dong_zhi.next(12)
+        asc: bool = (not solar.is_before(dong_zhi.get_julian_day().get_solar_day())) and solar.is_before(xia_zhi.get_julian_day().get_solar_day())
+        start: int = [8, 5, 2][self.get_day().get_earth_branch().get_index() % 3]
+        if asc:
+            start = 8 - start
+
+        earth_branch_index: int = self.get_index_in_day() % 12
+        return NineStar(start + (earth_branch_index if asc else -earth_branch_index))
+
+    def get_eight_char(self) -> EightChar:
+        """
+        八字
+        :return: 八字
+        """
+        return EightChar(self.get_year(), self.get_month(), self.get_day(), self._hour)
+
+    def get_recommends(self) -> list[Taboo]:
+        """
+        时辰 宜
+        :return: 宜忌列表
+        """
+        return Taboo.get_hour_recommends(self.get_day(), self._hour)
+
+    def get_avoids(self) -> list[Taboo]:
+        """
+        时辰 忌
+        :return: 宜忌列表
+        """
+        return Taboo.get_hour_avoids(self.get_day(), self._hour)

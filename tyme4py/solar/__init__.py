@@ -15,10 +15,10 @@ from tyme4py.util import ShouXingUtil
 from tyme4py.jd import JulianDay
 from tyme4py.festival import SolarFestival
 from tyme4py.holiday import LegalHoliday
-from tyme4py.sixtycycle import HideHeavenStemDay, HideHeavenStem
 
 if TYPE_CHECKING:
     from tyme4py.lunar import LunarDay, LunarMonth, LunarHour
+    from tyme4py.sixtycycle import HideHeavenStemDay, SixtyCycleDay, SixtyCycleHour
 
 
 class SolarTerm(LoopTyme):
@@ -310,7 +310,7 @@ class SolarMonth(AbstractTyme):
 
     def get_weeks(self, start: int) -> list[SolarWeek]:
         """
-        获取本月的公历周列表
+        本月的公历周列表
         :param start: 星期几作为一周的开始，1234560分别代表星期一至星期天
         :return: 周列表
         """
@@ -322,8 +322,8 @@ class SolarMonth(AbstractTyme):
 
     def get_days(self) -> list[SolarDay]:
         """
-        获取本月的公历日列表
-        :return: 公历日 SolarDay的列表，从1日开始
+        本月的公历日列表
+        :return: 公历日 SolarDay 的列表，从1日开始
         """
         l: [SolarDay] = []
         y: int = self.get_year()
@@ -660,6 +660,7 @@ class SolarDay(AbstractTyme):
         """
         :return: 人元司令分野
         """
+        from tyme4py.sixtycycle import HideHeavenStemDay, HideHeavenStem
         day_counts: [int] = [3, 5, 7, 9, 10, 30]
         term: SolarTerm = self.get_term()
         if term.is_qi():
@@ -744,6 +745,10 @@ class SolarDay(AbstractTyme):
             m = m.next(-1)
             days += m.get_day_count()
         return LunarDay(m.get_year(), m.get_month_with_leap(), days + 1)
+
+    def get_sixty_cycle_day(self) -> SixtyCycleDay:
+        from tyme4py.sixtycycle import SixtyCycleDay
+        return SixtyCycleDay.from_solar_day(self)
 
     def get_legal_holiday(self) -> LegalHoliday | None:
         """
@@ -936,9 +941,17 @@ class SolarTime(AbstractTyme):
 
     def get_lunar_hour(self) -> LunarHour:
         """
-        公历时刻转农历时辰
+        农历时辰
         :return: 农历时辰
         """
         from tyme4py.lunar import LunarDay, LunarHour
         d: LunarDay = self._day.get_lunar_day()
         return LunarHour(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
+
+    def get_sixty_cycle_hour(self) -> SixtyCycleHour:
+        """
+        干支时辰
+        :return: 干支时辰
+        """
+        from tyme4py.sixtycycle import SixtyCycleHour
+        return SixtyCycleHour.from_solar_time(self)

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+import warnings
 from math import ceil
 from typing import TYPE_CHECKING
 
@@ -9,11 +10,11 @@ from tyme4py.culture import Duty
 from tyme4py.eightchar.provider import ChildLimitProvider
 from tyme4py.eightchar.provider.impl import DefaultChildLimitProvider
 from tyme4py.enums import Gender, YinYang
-from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
 
 if TYPE_CHECKING:
     from tyme4py.lunar import LunarYear
     from tyme4py.solar import SolarTime, SolarTerm, SolarDay
+    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleYear
 
 
 class EightChar(AbstractCulture):
@@ -36,6 +37,7 @@ class EightChar(AbstractCulture):
         :param day: 日干支
         :param hour: 时干支
         """
+        from tyme4py.sixtycycle import SixtyCycle
         self._year = year if isinstance(year, SixtyCycle) else SixtyCycle(year)
         self._month = month if isinstance(month, SixtyCycle) else SixtyCycle(month)
         self._day = day if isinstance(day, SixtyCycle) else SixtyCycle(day)
@@ -74,6 +76,7 @@ class EightChar(AbstractCulture):
         胎元
         :return: 干支 SixtyCycle
         """
+        from tyme4py.sixtycycle import SixtyCycle
         return SixtyCycle(self._month.get_heaven_stem().next(1).get_name() + self._month.get_earth_branch().next(3).get_name())
 
     def get_fetal_breath(self) -> SixtyCycle:
@@ -81,6 +84,7 @@ class EightChar(AbstractCulture):
         胎息
         :return: 干支 SixtyCycle
         """
+        from tyme4py.sixtycycle import SixtyCycle, EarthBranch
         return SixtyCycle(self._day.get_heaven_stem().next(5).get_name() + EarthBranch(13 - self._day.get_earth_branch().get_index()).get_name())
 
     def get_own_sign(self) -> SixtyCycle:
@@ -88,6 +92,7 @@ class EightChar(AbstractCulture):
         命宫
         :return: 干支 SixtyCycle
         """
+        from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
         offset: int = self._month.get_earth_branch().next(-1).get_index() + self._hour.get_earth_branch().next(-1).get_index()
         offset = (26 if offset >= 14 else 14) - offset
         offset -= 1
@@ -98,17 +103,16 @@ class EightChar(AbstractCulture):
         身宫
         :return: 干支 SixtyCycle
         """
-        offset: int = self._month.get_earth_branch().get_index() + self._hour.get_earth_branch().get_index()
-        offset %= 12
-        offset -= 1
+        from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
+        offset: int = (self._month.get_earth_branch().get_index() + self._hour.get_earth_branch().get_index() - 1) % 12
         return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset).get_name() + EarthBranch(2 + offset).get_name())
 
     def get_duty(self) -> Duty:
         """
         建除十二值神
-        有些场景需要以节令切换的时刻区分，节令切换当天则会有两个值神，就需要从八字获取
         :return: 建除十二值神
         """
+        warnings.warn('get_duty() is deprecated, please use SixtyCycleDay.get_duty() instead.', DeprecationWarning)
         return Duty(self._day.get_earth_branch().get_index() - self._month.get_earth_branch().get_index())
 
     def get_name(self) -> str:
@@ -121,6 +125,7 @@ class EightChar(AbstractCulture):
         :param end_year: 结束年份，支持1-9999年
         :return: 公历时刻 SolarTime的列表
         """
+        from tyme4py.sixtycycle import HeavenStem
         from tyme4py.solar import SolarTime, SolarTerm
         l: [SolarTime] = []
         # 月地支距寅月的偏移值
@@ -339,9 +344,15 @@ class ChildLimit:
 
     def get_start_decade_fortune(self) -> DecadeFortune:
         """
-        :return: 大运
+        :return: 起运大运
         """
         return DecadeFortune(self, 0)
+
+    def get_decade_fortune(self) -> DecadeFortune:
+        """
+        :return: 所属大运
+        """
+        return DecadeFortune(self, -1)
 
     def get_start_fortune(self) -> Fortune:
         """
@@ -354,8 +365,40 @@ class ChildLimit:
         结束农历年
         :return: 农历年
         """
+        warnings.warn('get_end_lunar_year() is deprecated, please use SixtyCycleDay.get_duty() instead.', DeprecationWarning)
         from tyme4py.lunar import LunarYear
         return LunarYear.from_year(self.get_start_time().get_lunar_hour().get_year() + self.get_end_time().get_year() - self.get_start_time().get_year())
+
+    def get_start_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        开始(即出生)干支年
+        :return: 干支年
+        """
+        from tyme4py.sixtycycle import SixtyCycleYear
+        return SixtyCycleYear.from_year(self.get_start_time().get_year())
+
+    def get_end_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        结束(即起运)干支年
+        :return: 干支年
+        """
+        from tyme4py.sixtycycle import SixtyCycleYear
+        return SixtyCycleYear.from_year(self.get_end_time().get_year())
+
+    def get_start_age(self) -> int:
+        """
+        开始年龄
+        :return: 数字
+        """
+        return 1
+
+    def get_end_age(self) -> int:
+        """
+        结束年龄
+        :return: 数字
+        """
+        n: int = self.get_end_sixty_cycle_year().get_year() - self.get_start_sixty_cycle_year().get_year()
+        return max(n, 1)
 
 
 class Fortune(AbstractTyme):
@@ -380,13 +423,20 @@ class Fortune(AbstractTyme):
         """
         :return: 年龄
         """
-        return self._child_limit.get_end_time().get_year() - self._child_limit.get_start_time().get_year() + 1 + self._index
+        return self._child_limit.get_end_sixty_cycle_year().get_year() - self._child_limit.get_start_sixty_cycle_year().get_year() + 1 + self._index
 
     def get_lunar_year(self) -> LunarYear:
         """
-        :return:  农历年
+        :return: 农历年
         """
+        warnings.warn('get_lunar_year() is deprecated, please use get_sixty_cycle_year() instead.', DeprecationWarning)
         return self._child_limit.get_end_lunar_year().next(self._index)
+
+    def get_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        :return: 干支年
+        """
+        return self._child_limit.get_end_sixty_cycle_year().next(self._index)
 
     def get_sixty_cycle(self) -> SixtyCycle:
         """
@@ -422,7 +472,7 @@ class DecadeFortune(AbstractTyme):
         """
         :return: 开始年龄
         """
-        return self._child_limit.get_end_time().get_year() - self._child_limit.get_start_time().get_year() + 1 + self._index * 10
+        return self._child_limit.get_end_sixty_cycle_year().get_year() - self._child_limit.get_start_sixty_cycle_year().get_year() + 1 + self._index * 10
 
     def get_end_age(self) -> int:
         """
@@ -435,6 +485,7 @@ class DecadeFortune(AbstractTyme):
         开始农历年
         :return: 农历年
         """
+        warnings.warn('get_lunar_year() is deprecated, please use get_sixty_cycle_year() instead.', DeprecationWarning)
         return self._child_limit.get_end_lunar_year().next(self._index * 10)
 
     def get_end_lunar_year(self) -> LunarYear:
@@ -442,7 +493,22 @@ class DecadeFortune(AbstractTyme):
         结束农历年
         :return: 农历年
         """
+        warnings.warn('get_lunar_year() is deprecated, please use get_sixty_cycle_year() instead.', DeprecationWarning)
         return self.get_start_lunar_year().next(9)
+
+    def get_start_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        开始干支年
+        :return: 干支年
+        """
+        return self._child_limit.get_end_sixty_cycle_year().next(self._index * 10)
+
+    def get_end_sixty_cycle_year(self) -> SixtyCycleYear:
+        """
+        结束干支年
+        :return: 干支年
+        """
+        return self.get_start_sixty_cycle_year().next(9)
 
     def get_sixty_cycle(self) -> SixtyCycle:
         """

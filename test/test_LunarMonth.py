@@ -97,28 +97,28 @@ class TestLunarMonth(unittest.TestCase):
     def test29(self):
         d: LunarDay = SolarDay(2023, 10, 7).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
-        assert d.get_month_sixty_cycle().__str__() == '辛酉'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '辛酉'
 
     def test30(self):
         d: LunarDay = SolarDay(2023, 10, 8).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
-        assert d.get_month_sixty_cycle().__str__() == '壬戌'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test31(self):
         d: LunarDay = SolarDay(2023, 10, 15).get_lunar_day()
         assert d.get_lunar_month().get_name() == '九月'
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
-        assert d.get_month_sixty_cycle().__str__() == '壬戌'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test32(self):
         d: LunarDay = SolarDay(2023, 11, 7).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
-        assert d.get_month_sixty_cycle().__str__() == '壬戌'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test33(self):
         d: LunarDay = SolarDay(2023, 11, 8).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
-        assert d.get_month_sixty_cycle().__str__() == '癸亥'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '癸亥'
 
     def test34(self):
         # 2023年闰2月
@@ -140,17 +140,17 @@ class TestLunarMonth(unittest.TestCase):
     def test36(self):
         d: LunarDay = SolarDay(1983, 2, 15).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '甲寅'
-        assert d.get_month_sixty_cycle().__str__() == '甲寅'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '甲寅'
 
     def test37(self):
         d: LunarDay = SolarDay(2023, 10, 30).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
-        assert d.get_month_sixty_cycle().__str__() == '壬戌'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test38(self):
         d: LunarDay = SolarDay(2023, 10, 19).get_lunar_day()
         assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
-        assert d.get_month_sixty_cycle().__str__() == '壬戌'
+        assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test39(self):
         m: LunarMonth = LunarMonth.from_ym(2023, 11)
@@ -167,4 +167,4 @@ class TestLunarMonth(unittest.TestCase):
         assert LunarMonth.from_ym(2018, 1).get_sixty_cycle().__str__() == '甲寅'
 
     def test43(self):
-        assert LunarDay(2018, 6, 26).get_month_sixty_cycle().__str__() == '庚申'
+        assert LunarDay(2018, 6, 26).get_sixty_cycle_day().get_month().__str__() == '庚申'

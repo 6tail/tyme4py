@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+import warnings
 from math import floor, ceil
 from typing import TYPE_CHECKING
 
@@ -17,12 +18,11 @@ from tyme4py.eightchar.provider import EightCharProvider
 from tyme4py.eightchar.provider.impl import DefaultEightCharProvider
 from tyme4py.festival import LunarFestival
 from tyme4py.jd import JulianDay
-from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
-from tyme4py.solar import SolarTerm
 from tyme4py.util import ShouXingUtil
 
 if TYPE_CHECKING:
-    from tyme4py.solar import SolarDay, SolarTime
+    from tyme4py.solar import SolarDay, SolarTime, SolarTerm
+    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleDay, SixtyCycleHour
 
 
 class LunarYear(AbstractTyme):
@@ -38,9 +38,7 @@ class LunarYear(AbstractTyme):
     def _init():
         if LunarYear._isInit: return
         chars: str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@'
-        months: [
-            str] = '080b0r0j0j0j0C0j0j0C0j0j0j0C0j0C0j0C0F0j0V0V0V0u0j0j0C0j0j0j0j0V0C0j1v0u0C0V1v0C0b080u110u0C0j0C1v9K1v2z0j1vmZbl1veN3s1v0V0C2S1v0V0C2S2o0C0j1Z1c2S1v0j1c0j2z1v0j1c0j392H0b2_2S0C0V0j1c0j2z0C0C0j0j1c0j0N250j0C0j0b081n080b0C0C0C1c0j0N,0r1v1c1v0V0V0F0V0j0C0j0C0j0V0j0u1O0j0C0V0j0j0j0V0b080u0r0u080b0j0j0C0V0C0V0j0b080V0u080b0j0j0u0j1v0u080b1c0j080b0j0V0j0j0V0C0N1v0j1c0j0j1v2g1v420j1c0j2z1v0j1v5Q9z1v4l0j1vfn1v420j9z4l1v1v2S1c0j1v2S3s1v0V0C2S1v1v2S1c0j1v2S2_0b0j2_2z0j1c0j,0z0j0j0j0C0j0j0C0j0j0j0C0j0C0j0j0j0j0m0j0C0j0j0C0j0j0j0j0b0V0j0j0C0j0j0j0j0V0j0j0j0V0b0V0V0C0V0C0j0j0b080u110u0V0C0j0N0j0b080b080b0j0r0b0r0b0j0j0j0j0C0j0b0r0C0j0b0j0C0C0j0j0j0j0j0j0j0j0j0b110j0b0j0j0j0C0j0C0j0j0j0j0b080b080b0V080b080b0j0j0j0j0j0j0V0j0j0u1v0j0j0j0C0j0j0j0V0C0N1c0j0C0C0j0j0j1n080b0j0V0C0j0C0C2g0j1c0j0j1v2g1v0j0j1v7N0j1c0j3L0j0j1v5Q1Z5Q1v4lfn1v420j1v5Q1Z5Q1v4l1v2z1v,0H140r0N0r140r0u0r0V171c11140C0j0u110j0u0j1v0j0C0j0j0j0b080V0u080b0C1v0j0j0j0C0j0b080V0j0j0b080b0j0j0j0j0b080b0C080j0b080b0j0j0j0j0j0j0b080j0b080C0b080b080b080b0j0j0j0j080b0j0C0j0j0j0b0j0j080C0b0j0j0j0j0j0j0b08080b0j0C0j0j0j0b0j0j0K0b0j0C0j0j0j0b080b080j0C0b0j080b080b0j0j0j0j080b0j0b0r0j0j0j0b0j0C0r0b0j0j0j0j0j0j0j0b080j0b0r0C0j0b0j0j0j0r0b0j0C0j0j0j0u0r0b0C0j080b0j0j0j0j0j0j0j1c0j0b0j0j0j0C0j0j0j0j0j0j0j0b080j1c0u0j0j0j0C0j1c0j0u0j1c0j0j0j0j0j0j0j0j1c0j0u1v0j0j0V0j0j2g0j0j0j0C1v0C1G0j0j0V0C1Z1O0j0V0j0j2g1v0j0j0V0C2g5x1v4l1v421O7N0V0C4l1v2S1c0j1v2S2_,050b080C0j0j0j0C0j0j0C0j0j0j0C0j0C0j0C030j0j0j0j0j0j0j0j0j0C0j0b080u0V080b0j0j0V0j0j0j0j0j0j0j0j0j0V0N0j0C0C0j0j0j0j0j0j0j0j1c0j0u0j1v0j0j0j0j0j0b080b080j0j0j0b080b080b080b080b0j0j0j080b0j0b080j0j0j0j0b080b0j0j0r0b080b0b080j0j0j0j0b080b080j0b080j0b080b080b080b080b0j0j0r0b0j0b080j0j0j0j0b080b0j0j0C080b0b080j0j0j0j0j0j0j0b080u080j0j0b0j0j0j0C0j0b080j0j0j0j0b080b080b080b0C080b080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0j0C0b080b080j0b0j0j0C080b0j0j0j0j0j0j0b0j0j080C0b0j080b0j0j0j0j0j0j0j0C0j0j0j0b0j0j0C080b0j0j0j0j0j0j0b080b080b0K0b080b080b0j0j0j0j0j0j0j0C0j0j0u0j0j0V0j080b0j0C0j0j0j0b0j0r0C0b0j0j0j0j0j0j0j0j0j0C0j0b080b080b0j0C0C0j0C0j0j0j0u110u0j0j0j0j0j0j0j0j0C0j0j0u0j1c0j0j0j0j0j0j0j0j0V0C0u0j0C0C0V0C1Z0j0j0j0C0j0j0j1v0u0j1c0j0j0j0C0j0j2g0j1c1v0C1Z0V0j4l0j0V0j0j2g0j1v0j1v2S1c7N1v,0w0j1c0j0V0j0j0V0V0V0j0m0V0j0C1c140j0j0j0C0V0C0j1v0j0N0j0C0j0j0j0V0j0j1v0N0j0j0V0j0j0j0j0j0j080b0j0j0j0j0j0j0j080b0j0C0j0j0j0b0j0j080u080b0j0j0j0j0j0j0b080b080b080C0b0j080b080b0j0j0j0j080b0j0C0j0j0j0b0j0j080u080b0j0j0j0j0j0j0b080b080b080b0r0b0j080b080b0j0j0j0j080b0j0b0r0j0j0b080b0j0j080b0j080b0j080b080b0j0j0j0j0j0b080b0r0C0b080b0j0j0j0j080b0b080b080j0j0j0b080b080b080b0j0j0j0j080b0j0b080j0j0j0j0b080b0j0j0r0b080b0j0j0j0j0j0b080b080j0b0r0b080j0b080b0j0j0j0j080b0j0b080j0j0j0j0b080b0j080b0r0b0j080b080b0j0j0j0j0j0b080b0r0C0b080b0j0j0j0j0j0j0b080j0j0j0b080b080b080b0j0j0j0r0b0j0b080j0j0j0j0b080b0r0b0r0b0j080b080b0j0j0j0j0j0j0b0r0j0j0j0b0j0j0j0j080b0j0b080j0j0j0j0b080b080b0j0r0b0j080b0j0j0j0j0j0j0j0b0r0C0b0j0j0j0j0j0j0j080b0j0C0j0j0j0b0j0C0r0b0j0j0j0j0j0j0b080b080u0r0b0j080b0j0j0j0j0j0j0j0b0r0C0u0j0j0j0C0j080b0j0C0j0j0j0u110b0j0j0j0j0j0j0j0j0j0C0j0b080b0j0j0C0C0j0C0j0j0j0b0j1c0j080b0j0j0j0j0j0j0V0j0j0u0j1c0j0j0j0C0j0j2g0j0j0j0C0j0j0V0j0b080b1c0C0V0j0j2g0j0j0V0j0j1c0j1Z0j0j0C0C0j1v,160j0j0V0j1c0j0C0j0C0j1f0j0V0C0j0j0C0j0j0j1G080b080u0V080b0j0j0V0j1v0j0u0j1c0j0j0j0C0j0j0j0C0C0j1D0b0j080b0j0j0j0j0C0j0b0r0C0j0b0j0C0C0j0j0j0j0j0j0j0j0j0b0r0b0r0j0b0j0j0j0C0j0b0r0j0j0j0b080b080j0b0C0j080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0j0j0j0b080b080j0b0C0r0j0b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0j0j0j0C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080b080b080C0b080b080b080b0j0j0j0j0j0b080C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080j0b0C080j0j0b0j0j0j0j0j0j0b080j0b080C0b080b080b080b0j0j0j0j080b0j0C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080j0b080u080j0j0b0j0j0j0j0j0j0b080C0j0j0b080b0j0j0C0j0j080b0j0j0j0j0j0b080b0C0r0b080b0j0j0j0j0j0j0b080j0b080u080b080b080b0j0j0j0C0j0b080j0j0j0j0b0j0j0j0C0j0j080b0j0j0j0j0j0b080b0C0r0b080b0j0j0j0j0j0j0b080j0b0r0b080b080b080b0j0j0j0r0b0j0b0r0j0j0j0b0j0j0j0r0b0j080b0j0j0j0j0j0j0j0b0r0C0b0j0j0j0j0j0j0j0b080j0C0u080b080b0j0j0j0r0b0j0C0C0j0b0j110b0j080b0j0j0j0j0j0j0u0r0C0b0j0j0j0j0j0j0j0j0j0C0j0j0j0b0j1c0j0C0j0j0j0b0j0814080b080b0j0j0j0j0j0j1c0j0u0j0j0V0j0j0j0j0j0j0j0u110u0j0j0j,020b0r0C0j0j0j0C0j0j0V0j0j0j0j0j0C0j1f0j0C0j0V1G0j0j0j0j0V0C0j0C1v0u0j0j0j0V0j0j0C0j0j0j1v0N0C0V0j0j0j0K0C250b0C0V0j0j0V0j0j2g0C0V0j0j0C0j0j0b081v0N0j0j0V0V0j0j0u0j1c0j080b0j0j0j0j0j0j0V0j0j0u0j0j0V0j0j0j0C0j0b080b080V0b0j080b0j0j0j0j0j0j0j0b0r0C0j0b0j0j0j0C0j080b0j0j0j0j0j0j0u0r0C0u0j0j0j0j0j0j0b080j0C0j0b080b080b0j0C0j080b0j0j0j0j0j0j0b080b110b0j0j0j0j0j0j0j0j0j0b0r0j0j0j0b0j0j0j0r0b0j0b080j0j0j0j0b080b080b080b0r0b0j080b080b0j0j0j0j0j0j0b0r0C0b080b0j0j0j0j080b0j0b080j0j0j0j0b080b080b0j0j0j0r0b0j0j0j0j0j0j0b080b0j080C0b0j080b080b0j0j0j0j080b0j0b0r0C0b080b0j0j0j0j080b0j0j0j0j0j0b080b080b080b0j0j080b0r0b0j0j0j0j0j0j0b0j0j080C0b0j080b080b0j0j0j0j0j0b080C0j0j0b080b0j0j0C0j0b080j0j0j0j0b080b080b080b0C0C080b0j0j0j0j0j0j0b0C0C080b080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0b080j0j0b080b080b080b0C0r0b0j0j0j0j0j0j0b080b0r0b0r0b0j080b080b0j0j0j0j0j0j0b0r0C0j0b0j0j0j0j0j0j0b080j0C0j0b080j0b0j0j0K0b0j0C0j0j0j0b080b0j0K0b0j080b0j0j0j0j0j0j0V0j0j0b0j0j0j0C0j0j0j0j,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_1Z0V2o141v0j0C0C0j2z1v0j1c0j7N1O420j1c0j1v2S1c0j1v2S2_0b0j0V0j0j1v0N1v0j0j1c0j1v140j0V0j0j0C0C0b080u1v0C0V0u110u0j0j0j0C0j0j0j0C0C0N0C0V0j0j0C0j0j0b080u110u0C0j0C0u0r0C0u080b0j0j0C0j0j0j'.split(
-            ',', -1)
+        months: [str] = '080b0r0j0j0j0C0j0j0C0j0j0j0C0j0C0j0C0F0j0V0V0V0u0j0j0C0j0j0j0j0V0C0j1v0u0C0V1v0C0b080u110u0C0j0C1v9K1v2z0j1vmZbl1veN3s1v0V0C2S1v0V0C2S2o0C0j1Z1c2S1v0j1c0j2z1v0j1c0j392H0b2_2S0C0V0j1c0j2z0C0C0j0j1c0j0N250j0C0j0b081n080b0C0C0C1c0j0N,0r1v1c1v0V0V0F0V0j0C0j0C0j0V0j0u1O0j0C0V0j0j0j0V0b080u0r0u080b0j0j0C0V0C0V0j0b080V0u080b0j0j0u0j1v0u080b1c0j080b0j0V0j0j0V0C0N1v0j1c0j0j1v2g1v420j1c0j2z1v0j1v5Q9z1v4l0j1vfn1v420j9z4l1v1v2S1c0j1v2S3s1v0V0C2S1v1v2S1c0j1v2S2_0b0j2_2z0j1c0j,0z0j0j0j0C0j0j0C0j0j0j0C0j0C0j0j0j0j0m0j0C0j0j0C0j0j0j0j0b0V0j0j0C0j0j0j0j0V0j0j0j0V0b0V0V0C0V0C0j0j0b080u110u0V0C0j0N0j0b080b080b0j0r0b0r0b0j0j0j0j0C0j0b0r0C0j0b0j0C0C0j0j0j0j0j0j0j0j0j0b110j0b0j0j0j0C0j0C0j0j0j0j0b080b080b0V080b080b0j0j0j0j0j0j0V0j0j0u1v0j0j0j0C0j0j0j0V0C0N1c0j0C0C0j0j0j1n080b0j0V0C0j0C0C2g0j1c0j0j1v2g1v0j0j1v7N0j1c0j3L0j0j1v5Q1Z5Q1v4lfn1v420j1v5Q1Z5Q1v4l1v2z1v,0H140r0N0r140r0u0r0V171c11140C0j0u110j0u0j1v0j0C0j0j0j0b080V0u080b0C1v0j0j0j0C0j0b080V0j0j0b080b0j0j0j0j0b080b0C080j0b080b0j0j0j0j0j0j0b080j0b080C0b080b080b080b0j0j0j0j080b0j0C0j0j0j0b0j0j080C0b0j0j0j0j0j0j0b08080b0j0C0j0j0j0b0j0j0K0b0j0C0j0j0j0b080b080j0C0b0j080b080b0j0j0j0j080b0j0b0r0j0j0j0b0j0C0r0b0j0j0j0j0j0j0j0b080j0b0r0C0j0b0j0j0j0r0b0j0C0j0j0j0u0r0b0C0j080b0j0j0j0j0j0j0j1c0j0b0j0j0j0C0j0j0j0j0j0j0j0b080j1c0u0j0j0j0C0j1c0j0u0j1c0j0j0j0j0j0j0j0j1c0j0u1v0j0j0V0j0j2g0j0j0j0C1v0C1G0j0j0V0C1Z1O0j0V0j0j2g1v0j0j0V0C2g5x1v4l1v421O7N0V0C4l1v2S1c0j1v2S2_,050b080C0j0j0j0C0j0j0C0j0j0j0C0j0C0j0C030j0j0j0j0j0j0j0j0j0C0j0b080u0V080b0j0j0V0j0j0j0j0j0j0j0j0j0V0N0j0C0C0j0j0j0j0j0j0j0j1c0j0u0j1v0j0j0j0j0j0b080b080j0j0j0b080b080b080b080b0j0j0j080b0j0b080j0j0j0j0b080b0j0j0r0b080b0b080j0j0j0j0b080b080j0b080j0b080b080b080b080b0j0j0r0b0j0b080j0j0j0j0b080b0j0j0C080b0b080j0j0j0j0j0j0j0b080u080j0j0b0j0j0j0C0j0b080j0j0j0j0b080b080b080b0C080b080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0j0C0b080b080j0b0j0j0C080b0j0j0j0j0j0j0b0j0j080C0b0j080b0j0j0j0j0j0j0j0C0j0j0j0b0j0j0C080b0j0j0j0j0j0j0b080b080b0K0b080b080b0j0j0j0j0j0j0j0C0j0j0u0j0j0V0j080b0j0C0j0j0j0b0j0r0C0b0j0j0j0j0j0j0j0j0j0C0j0b080b080b0j0C0C0j0C0j0j0j0u110u0j0j0j0j0j0j0j0j0C0j0j0u0j1c0j0j0j0j0j0j0j0j0V0C0u0j0C0C0V0C1Z0j0j0j0C0j0j0j1v0u0j1c0j0j0j0C0j0j2g0j1c1v0C1Z0V0j4l0j0V0j0j2g0j1v0j1v2S1c7N1v,0w0j1c0j0V0j0j0V0V0V0j0m0V0j0C1c140j0j0j0C0V0C0j1v0j0N0j0C0j0j0j0V0j0j1v0N0j0j0V0j0j0j0j0j0j080b0j0j0j0j0j0j0j080b0j0C0j0j0j0b0j0j080u080b0j0j0j0j0j0j0b080b080b080C0b0j080b080b0j0j0j0j080b0j0C0j0j0j0b0j0j080u080b0j0j0j0j0j0j0b080b080b080b0r0b0j080b080b0j0j0j0j080b0j0b0r0j0j0b080b0j0j080b0j080b0j080b080b0j0j0j0j0j0b080b0r0C0b080b0j0j0j0j080b0b080b080j0j0j0b080b080b080b0j0j0j0j080b0j0b080j0j0j0j0b080b0j0j0r0b080b0j0j0j0j0j0b080b080j0b0r0b080j0b080b0j0j0j0j080b0j0b080j0j0j0j0b080b0j080b0r0b0j080b080b0j0j0j0j0j0b080b0r0C0b080b0j0j0j0j0j0j0b080j0j0j0b080b080b080b0j0j0j0r0b0j0b080j0j0j0j0b080b0r0b0r0b0j080b080b0j0j0j0j0j0j0b0r0j0j0j0b0j0j0j0j080b0j0b080j0j0j0j0b080b080b0j0r0b0j080b0j0j0j0j0j0j0j0b0r0C0b0j0j0j0j0j0j0j080b0j0C0j0j0j0b0j0C0r0b0j0j0j0j0j0j0b080b080u0r0b0j080b0j0j0j0j0j0j0j0b0r0C0u0j0j0j0C0j080b0j0C0j0j0j0u110b0j0j0j0j0j0j0j0j0j0C0j0b080b0j0j0C0C0j0C0j0j0j0b0j1c0j080b0j0j0j0j0j0j0V0j0j0u0j1c0j0j0j0C0j0j2g0j0j0j0C0j0j0V0j0b080b1c0C0V0j0j2g0j0j0V0j0j1c0j1Z0j0j0C0C0j1v,160j0j0V0j1c0j0C0j0C0j1f0j0V0C0j0j0C0j0j0j1G080b080u0V080b0j0j0V0j1v0j0u0j1c0j0j0j0C0j0j0j0C0C0j1D0b0j080b0j0j0j0j0C0j0b0r0C0j0b0j0C0C0j0j0j0j0j0j0j0j0j0b0r0b0r0j0b0j0j0j0C0j0b0r0j0j0j0b080b080j0b0C0j080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0j0j0j0b080b080j0b0C0r0j0b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0j0j0j0C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080b080b080C0b080b080b080b0j0j0j0j0j0b080C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080j0b0C080j0j0b0j0j0j0j0j0j0b080j0b080C0b080b080b080b0j0j0j0j080b0j0C0j0j0b080b0j0j0C080b0j0j0j0j0j0j0b080j0b080u080j0j0b0j0j0j0j0j0j0b080C0j0j0b080b0j0j0C0j0j080b0j0j0j0j0j0b080b0C0r0b080b0j0j0j0j0j0j0b080j0b080u080b080b080b0j0j0j0C0j0b080j0j0j0j0b0j0j0j0C0j0j080b0j0j0j0j0j0b080b0C0r0b080b0j0j0j0j0j0j0b080j0b0r0b080b080b080b0j0j0j0r0b0j0b0r0j0j0j0b0j0j0j0r0b0j080b0j0j0j0j0j0j0j0b0r0C0b0j0j0j0j0j0j0j0b080j0C0u080b080b0j0j0j0r0b0j0C0C0j0b0j110b0j080b0j0j0j0j0j0j0u0r0C0b0j0j0j0j0j0j0j0j0j0C0j0j0j0b0j1c0j0C0j0j0j0b0j0814080b080b0j0j0j0j0j0j1c0j0u0j0j0V0j0j0j0j0j0j0j0u110u0j0j0j,020b0r0C0j0j0j0C0j0j0V0j0j0j0j0j0C0j1f0j0C0j0V1G0j0j0j0j0V0C0j0C1v0u0j0j0j0V0j0j0C0j0j0j1v0N0C0V0j0j0j0K0C250b0C0V0j0j0V0j0j2g0C0V0j0j0C0j0j0b081v0N0j0j0V0V0j0j0u0j1c0j080b0j0j0j0j0j0j0V0j0j0u0j0j0V0j0j0j0C0j0b080b080V0b0j080b0j0j0j0j0j0j0j0b0r0C0j0b0j0j0j0C0j080b0j0j0j0j0j0j0u0r0C0u0j0j0j0j0j0j0b080j0C0j0b080b080b0j0C0j080b0j0j0j0j0j0j0b080b110b0j0j0j0j0j0j0j0j0j0b0r0j0j0j0b0j0j0j0r0b0j0b080j0j0j0j0b080b080b080b0r0b0j080b080b0j0j0j0j0j0j0b0r0C0b080b0j0j0j0j080b0j0b080j0j0j0j0b080b080b0j0j0j0r0b0j0j0j0j0j0j0b080b0j080C0b0j080b080b0j0j0j0j080b0j0b0r0C0b080b0j0j0j0j080b0j0j0j0j0j0b080b080b080b0j0j080b0r0b0j0j0j0j0j0j0b0j0j080C0b0j080b080b0j0j0j0j0j0b080C0j0j0b080b0j0j0C0j0b080j0j0j0j0b080b080b080b0C0C080b0j0j0j0j0j0j0b0C0C080b080b080b0j0j0j0j0j0j0b0C080j0j0b0j0j0j0C0j0b080j0b080j0j0b080b080b080b0C0r0b0j0j0j0j0j0j0b080b0r0b0r0b0j080b080b0j0j0j0j0j0j0b0r0C0j0b0j0j0j0j0j0j0b080j0C0j0b080j0b0j0j0K0b0j0C0j0j0j0b080b0j0K0b0j080b0j0j0j0j0j0j0V0j0j0b0j0j0j0C0j0j0j0j,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_1Z0V2o141v0j0C0C0j2z1v0j1c0j7N1O420j1c0j1v2S1c0j1v2S2_0b0j0V0j0j1v0N1v0j0j1c0j1v140j0V0j0j0C0C0b080u1v0C0V0u110u0j0j0j0C0j0j0j0C0C0N0C0V0j0j0C0j0j0b080u110u0C0j0C0u0r0C0u080b0j0j0C0j0j0j'.split(',', -1)
         for i in range(0, 12):
             n: int = 0
             m: str = months[i]
@@ -123,6 +121,7 @@ class LunarYear(AbstractTyme):
         当年的干支
         :return: 干支 SixtyCycle
         """
+        from tyme4py.sixtycycle import SixtyCycle
         return SixtyCycle(self._year - 4)
 
     def get_twenty(self) -> Twenty:
@@ -144,13 +143,20 @@ class LunarYear(AbstractTyme):
         """
         return Direction([0, 7, 7, 2, 3, 3, 8, 1, 1, 6, 0, 0][self.get_sixty_cycle().get_earth_branch().get_index()])
 
+    def get_first_month(self) -> LunarMonth:
+        """
+        首月（农历月，即一月，俗称正月）
+        :return: 农历月
+        """
+        return LunarMonth.from_ym(self._year, 1)
+
     def get_months(self) -> list[LunarMonth]:
         """
         农历月列表
-        :return: 返回为农历月 LunarMonth的列表，从正月到十二月，包含闰月。
+        :return: 农历月 LunarMonth 的列表，从正月到十二月，包含闰月。
         """
         l: [LunarMonth] = []
-        m: LunarMonth = LunarMonth.from_ym(self._year, 1)
+        m: LunarMonth = self.get_first_month()
         while m.get_year() == self._year:
             l.append(m)
             m = m.next(1)
@@ -393,8 +399,8 @@ class LunarMonth(AbstractTyme):
 
     def get_days(self) -> list[LunarDay]:
         """
-        获取本月的农历日列表
-        :return: 农历日 LunarDay的列表，从初一开始。
+        本月的农历日列表
+        :return: 农历日 LunarDay 的列表，从初一开始。
         """
         y: int = self.get_year()
         m: int = self.get_month_with_leap()
@@ -405,9 +411,9 @@ class LunarMonth(AbstractTyme):
 
     def get_weeks(self, start: int) -> list[LunarWeek]:
         """
-        获取本月的农历周列表
+        本月的农历周列表
         :param start: 参数为起始星期，1234560分别代表星期一至星期天
-        :return: 农历周 LunarWeek的列表。
+        :return: 农历周 LunarWeek 的列表。
         """
         y: int = self.get_year()
         m: int = self.get_month_with_leap()
@@ -421,6 +427,7 @@ class LunarMonth(AbstractTyme):
         当月的干支
         :return: 干支 SixtyCycle。
         """
+        from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
         return SixtyCycle(HeavenStem((self._year.get_sixty_cycle().get_heaven_stem().get_index() + 1) * 2 + self._index_in_year).get_name() + EarthBranch(self._index_in_year + 2).get_name())
 
     def get_nine_star(self) -> NineStar:
@@ -437,6 +444,7 @@ class LunarMonth(AbstractTyme):
         太岁方位
         :return: 方位 Direction。
         """
+        from tyme4py.sixtycycle import SixtyCycle
         sixty_cycle: SixtyCycle = self.get_sixty_cycle()
         n: int = [7, -1, 1, 3][sixty_cycle.get_earth_branch().next(-2).get_index() % 4]
         return sixty_cycle.get_heaven_stem().get_direction() if n == -1 else Direction(n)
@@ -547,7 +555,7 @@ class LunarWeek(AbstractTyme):
                 d += m.get_week_count(start_index)
         return LunarWeek(m.get_year(), m.get_month_with_leap(), d, start_index)
 
-    def get_firstDay(self) -> LunarDay:
+    def get_first_day(self) -> LunarDay:
         """
         本周第一天的农历日
         :return: 农历日 LunarDay。
@@ -561,14 +569,14 @@ class LunarWeek(AbstractTyme):
         :return: 农历日 LunarDay的列表。
         """
         l: [LunarDay] = []
-        d: LunarDay = self.get_firstDay()
+        d: LunarDay = self.get_first_day()
         l.append(d)
         for i in range(1, 7):
             l.append(d.next(i))
         return l
 
     def __eq__(self, other: LunarWeek) -> bool:
-        return other and other.get_firstDay() == self.get_firstDay()
+        return other and other.get_first_day() == self.get_first_day()
 
 
 class LunarDay(AbstractTyme):
@@ -579,6 +587,10 @@ class LunarDay(AbstractTyme):
     """农历月"""
     _day: int
     """日"""
+    _solar_day: SolarDay = None
+    """公历日（第一次使用时才会初始化）"""
+    _sixty_cycle_day: SixtyCycleDay = None
+    """干支日（第一次使用时才会初始化）"""
 
     def __init__(self, year: int, month: int, day: int):
         """
@@ -674,61 +686,49 @@ class LunarDay(AbstractTyme):
     def get_year_sixty_cycle(self) -> SixtyCycle:
         """
         当天的年干支 非当天所属的农历年干支，以立春换年。
-        :return:干支 SixtyCycle。
+        :return: 干支 SixtyCycle
         """
-        solar_day: SolarDay = self.get_solar_day()
-        solar_year: int = solar_day.get_year()
-        spring_solar_day: SolarDay = SolarTerm(solar_year, 3).get_julian_day().get_solar_day()
-        lunar_year: LunarYear = self._month.get_lunar_year()
-        year: int = lunar_year.get_year()
-        sixty_cycle: SixtyCycle = lunar_year.get_sixty_cycle()
-        if year == solar_year:
-            if solar_day.is_before(spring_solar_day):
-                sixty_cycle = sixty_cycle.next(-1)
-        elif year < solar_year:
-            if not solar_day.is_before(spring_solar_day):
-                sixty_cycle = sixty_cycle.next(1)
-        return sixty_cycle
+        warnings.warn('get_year_sixty_cycle() is deprecated, please use SixtyCycleDay.get_year() instead.', DeprecationWarning)
+        return self.get_sixty_cycle_day().get_year()
 
     def get_month_sixty_cycle(self) -> SixtyCycle:
         """
         当天的月干支 非当天所属的农历月干支，以节令换月。
-        :return: 干支 SixtyCycle。
+        :return: 干支 SixtyCycle
         """
-        solar_day: SolarDay = self.get_solar_day()
-        year: int = solar_day.get_year()
-        term: SolarTerm = solar_day.get_term()
-        index: int = term.get_index() - 3
-        if index < 0 and term.get_julian_day().get_solar_day().is_after(SolarTerm(year, 3).get_julian_day().get_solar_day()):
-            index += 24
-        return LunarMonth.from_ym(year, 1).get_sixty_cycle().next(floor(index / 2))
+        warnings.warn('get_month_sixty_cycle() is deprecated, please use SixtyCycleDay.get_month() instead.', DeprecationWarning)
+        return self.get_sixty_cycle_day().get_month()
 
     def get_sixty_cycle(self) -> SixtyCycle:
         """
         当天的干支
         :return: 干支
         """
+        from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
         offset: int = int(self._month.get_first_julian_day().next(self._day - 12).get_day())
         return SixtyCycle(HeavenStem(offset).get_name() + EarthBranch(offset).get_name())
 
     def get_duty(self) -> Duty:
         """
-        :return: 建除十二值神 Duty。
+        建除十二值神
+        :return: 建除十二值神 Duty
         """
-        return Duty(self.get_sixty_cycle().get_earth_branch().get_index() - self.get_month_sixty_cycle().get_earth_branch().get_index())
+        return self.get_sixty_cycle_day().get_duty()
 
     def get_twelve_star(self) -> TwelveStar:
         """
-        :return: 黄道黑道十二神 TwelveStar。
+        黄道黑道十二神
+        :return: 黄道黑道十二神 TwelveStar
         """
-        return TwelveStar(self.get_sixty_cycle().get_earth_branch().get_index() + (8 - self.get_month_sixty_cycle().get_earth_branch().get_index() % 6) * 2)
+        return self.get_sixty_cycle_day().get_twelve_star()
 
     def get_nine_star(self) -> NineStar:
         """
         :return: 九星 NineStar。
         """
-        solar: SolarDay = self.get_solar_day()
-        dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
+        from tyme4py.solar import SolarTerm
+        d: SolarDay = self.get_solar_day()
+        dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
         xia_zhi: SolarTerm = dong_zhi.next(12)
         dong_zhi2: SolarTerm = dong_zhi.next(24)
         dong_zhi_solar: SolarDay = dong_zhi.get_julian_day().get_solar_day()
@@ -741,14 +741,14 @@ class LunarDay(AbstractTyme):
         solar_shun_bai2: SolarDay = dong_zhi_solar2.next(60 - dong_zhi_index2 if dong_zhi_index2 > 29 else -dong_zhi_index2)
         solar_ni_zi: SolarDay = xia_zhi_solar.next(60 - xia_zhi_index if xia_zhi_index > 29 else -xia_zhi_index)
         offset: int = 0
-        if not solar.is_before(solar_shun_bai) and solar.is_before(solar_ni_zi):
-            offset = solar.subtract(solar_shun_bai)
-        elif not solar.is_before(solar_ni_zi) and solar.is_before(solar_shun_bai2):
-            offset = 8 - solar.subtract(solar_ni_zi)
-        elif not solar.is_before(solar_shun_bai2):
-            offset = solar.subtract(solar_shun_bai2)
-        elif solar.is_before(solar_shun_bai):
-            offset = 8 + solar_shun_bai.subtract(solar)
+        if not d.is_before(solar_shun_bai) and d.is_before(solar_ni_zi):
+            offset = d.subtract(solar_shun_bai)
+        elif not d.is_before(solar_ni_zi) and d.is_before(solar_shun_bai2):
+            offset = 8 - d.subtract(solar_ni_zi)
+        elif not d.is_before(solar_shun_bai2):
+            offset = d.subtract(solar_shun_bai2)
+        elif d.is_before(solar_shun_bai):
+            offset = 8 + solar_shun_bai.subtract(d)
         return NineStar(offset)
 
     def get_jupiter_direction(self) -> Direction:
@@ -764,20 +764,32 @@ class LunarDay(AbstractTyme):
         """
         :return:逐日胎神 FetusDay。
         """
-        return FetusDay(self)
+        return FetusDay.from_lunar_day(self)
 
     def get_phase(self) -> Phase:
         """
+        月相
         :return: 月相 Phase。
         """
         return Phase(self._day - 1)
 
     def get_solar_day(self) -> SolarDay:
         """
-        农历日转公历日
-        :return:公历日 SolarDay。
+        公历日
+        :return: 公历日 SolarDay。
         """
-        return self._month.get_first_julian_day().next(self._day - 1).get_solar_day()
+        if self._solar_day is None:
+            self._solar_day = self._month.get_first_julian_day().next(self._day - 1).get_solar_day()
+        return self._solar_day
+
+    def get_sixty_cycle_day(self) -> SixtyCycleDay:
+        """
+        干支日
+        :return: 干支日
+        """
+        if self._sixty_cycle_day is None:
+            self._sixty_cycle_day = self.get_solar_day().get_sixty_cycle_day()
+        return self._sixty_cycle_day
 
     def get_twenty_eight_star(self) -> TwentyEightStar:
         """
@@ -803,21 +815,21 @@ class LunarDay(AbstractTyme):
         神煞列表(吉神宜趋，凶神宜忌)
         :return: 神煞列表
         """
-        return God.get_day_gods(self.get_month_sixty_cycle(), self.get_sixty_cycle())
+        return self.get_sixty_cycle_day().get_gods()
 
     def get_recommends(self) -> list[Taboo]:
         """
         今日 宜
         :return: 宜忌列表
         """
-        return Taboo.get_day_recommends(self.get_month_sixty_cycle(), self.get_sixty_cycle())
+        return self.get_sixty_cycle_day().get_recommends()
 
     def get_avoids(self) -> list[Taboo]:
         """
         今日 忌
         :return: 宜忌列表
         """
-        return Taboo.get_day_avoids(self.get_month_sixty_cycle(), self.get_sixty_cycle())
+        return self.get_sixty_cycle_day().get_avoids()
 
     def get_hours(self) -> list[LunarHour]:
         """
@@ -853,6 +865,10 @@ class LunarHour(AbstractTyme):
     """分"""
     _second: int
     """秒"""
+    _solar_time: SolarTime = None
+    """公历时刻（第一次使用时才会初始化）"""
+    _sixty_cycle_hour: SixtyCycleHour = None
+    """干支时辰（第一次使用时才会初始化）"""
 
     def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, second: int = 0):
         """
@@ -925,6 +941,7 @@ class LunarHour(AbstractTyme):
         return self._second
 
     def get_name(self) -> str:
+        from tyme4py.sixtycycle import EarthBranch
         return f'{EarthBranch(self.get_index_in_day()).get_name()}时'
 
     def __str__(self) -> str:
@@ -978,64 +995,52 @@ class LunarHour(AbstractTyme):
     def get_year_sixty_cycle(self) -> SixtyCycle:
         """
         当时的年干支  非当时所属的农历年干支
-        :param: 默认false 以一月初一换干支；为true时以立春具体时刻换年
-        :return: 干支 SixtyCycle。
+        :return: 干支 SixtyCycle
         """
-        solar_time: SolarTime = self.get_solar_time()
-        solar_year: int = self._day.get_solar_day().get_year()
-        spring_solar_time: SolarTime = SolarTerm(solar_year, 3).get_julian_day().get_solar_time()
-        lunar_year: LunarYear = self._day.get_lunar_month().get_lunar_year()
-        year: int = lunar_year.get_year()
-        sixty_cycle: SixtyCycle = lunar_year.get_sixty_cycle()
-        if year == solar_year:
-            if solar_time.is_before(spring_solar_time):
-                sixty_cycle = sixty_cycle.next(-1)
-        elif year < solar_year:
-            if not solar_time.is_before(spring_solar_time):
-                sixty_cycle = sixty_cycle.next(1)
-        return sixty_cycle
+        warnings.warn('get_year_sixty_cycle() is deprecated, please use SixtyCycleHour.get_year() instead.', DeprecationWarning)
+        return self.get_sixty_cycle_hour().get_year()
 
     def get_month_sixty_cycle(self) -> SixtyCycle:
         """
         当时的月干支 非当天所属的农历月干支，以节令具体时刻换月。
-        :return:  干支 SixtyCycle。
+        :return: 干支 SixtyCycle
         """
-        solar_time: SolarTime = self.get_solar_time()
-        year: int = solar_time.get_year()
-        term: SolarTerm = solar_time.get_term()
-        index: int = term.get_index() - 3
-        if index < 0 and term.get_julian_day().get_solar_time().is_after(SolarTerm(year, 3).get_julian_day().get_solar_time()):
-            index += 24
-        return LunarMonth.from_ym(year, 1).get_sixty_cycle().next(floor(index / 2))
+        warnings.warn('get_year_sixty_cycle() is deprecated, please use SixtyCycleHour.get_month() instead.', DeprecationWarning)
+        return self.get_sixty_cycle_hour().get_month()
 
     def get_day_sixty_cycle(self) -> SixtyCycle:
         """
         当时的日干支
         :return: 干支 SixtyCycle。注意：23:00开始算做第二天。
         """
-        d: SixtyCycle = self._day.get_sixty_cycle()
-        return d if self._hour < 23 else d.next(1)
+        warnings.warn('get_year_sixty_cycle() is deprecated, please use SixtyCycleHour.get_day() instead.', DeprecationWarning)
+        return self.get_sixty_cycle_hour().get_day()
 
     def get_sixty_cycle(self) -> SixtyCycle:
         """
         时辰干支
         :return: 干支 SixtyCycle。
         """
+        from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
         earth_branch_index: int = self.get_index_in_day() % 12
-        heaven_stem_index: int = self.get_day_sixty_cycle().get_heaven_stem().get_index() % 5 * 2 + earth_branch_index
+        d: SixtyCycle = self._day.get_sixty_cycle()
+        if self._hour >= 23:
+            d = d.next(1)
+        heaven_stem_index: int = d.get_heaven_stem().get_index() % 5 * 2 + earth_branch_index
         return SixtyCycle(HeavenStem(heaven_stem_index).get_name() + EarthBranch(earth_branch_index).get_name())
 
     def get_twelve_star(self) -> TwelveStar:
         """
         :return: 黄道黑道十二神 TwelveStar。
         """
-        return TwelveStar(self.get_sixty_cycle().get_earth_branch().get_index() + (8 - self.get_day_sixty_cycle().get_earth_branch().get_index() % 6) * 2)
+        return TwelveStar(self.get_sixty_cycle().get_earth_branch().get_index() + (8 - self.get_sixty_cycle_hour().get_day().get_earth_branch().get_index() % 6) * 2)
 
     def get_nine_star(self) -> NineStar:
         """
         九星（时家紫白星歌诀：三元时白最为佳，冬至阳生顺莫差，孟日七宫仲一白，季日四绿发萌芽，每把时辰起甲子，本时星耀照光华，时星移入中宫去，顺飞八方逐细查。夏至阴生逆回首，孟归三碧季加六，仲在九宫时起甲，依然掌中逆轮跨。）
         :return: 九星 NineStar。
         """
+        from tyme4py.solar import SolarTerm
         solar: SolarDay = self._day.get_solar_day()
         dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
         xia_zhi: SolarTerm = dong_zhi.next(12)
@@ -1049,33 +1054,44 @@ class LunarHour(AbstractTyme):
 
     def get_solar_time(self) -> SolarTime:
         """
-        农历时辰转公历时刻
-        :return: 公历时刻 SolarTime。
+        公历时刻
+        :return: 公历时刻 SolarTime
         """
         from tyme4py.solar import SolarTime
-        d: SolarDay = self._day.get_solar_day()
-        return SolarTime(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
+        if self._solar_time is None:
+            d: SolarDay = self._day.get_solar_day()
+            self._solar_time = SolarTime(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
+        return self._solar_time
+
+    def get_sixty_cycle_hour(self) -> SixtyCycleHour:
+        """
+        干支时辰
+        :return: 干支时辰 SixtyCycleHour
+        """
+        if self._sixty_cycle_hour is None:
+            self._sixty_cycle_hour = self.get_solar_time().get_sixty_cycle_hour()
+        return self._sixty_cycle_hour
 
     def get_eight_char(self) -> EightChar:
         """
-        农历时辰转八字
+        八字
         :return: 八字
         """
         return LunarHour.provider.get_eight_char(self)
 
     def get_recommends(self) -> list[Taboo]:
         """
-        时辰 宜
+        宜
         :return: 宜忌列表
         """
-        return Taboo.get_hour_recommends(self.get_day_sixty_cycle(), self.get_sixty_cycle())
+        return Taboo.get_hour_recommends(self.get_sixty_cycle_hour().get_day(), self.get_sixty_cycle())
 
     def get_avoids(self) -> list[Taboo]:
         """
-        时辰 忌
+        忌
         :return: 宜忌列表
         """
-        return Taboo.get_hour_avoids(self.get_day_sixty_cycle(), self.get_sixty_cycle())
+        return Taboo.get_hour_avoids(self.get_sixty_cycle_hour().get_day(), self.get_sixty_cycle())
 
     def get_minor_ren(self) -> MinorRen:
         """

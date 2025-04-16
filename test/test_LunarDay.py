@@ -102,7 +102,7 @@ class TestLunarDay(unittest.TestCase):
     def test26(self):
         lunar: LunarDay = LunarDay(2005, 11, 23)
         assert lunar.get_lunar_month().get_sixty_cycle().get_name() == '戊子'
-        assert lunar.get_month_sixty_cycle().get_name() == '戊子'
+        assert lunar.get_sixty_cycle_day().get_month().get_name() == '戊子'
 
     def test27(self):
         lunar: LunarDay = LunarDay(2024, 1, 1)

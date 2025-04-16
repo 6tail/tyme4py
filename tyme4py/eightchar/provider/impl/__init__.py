@@ -16,8 +16,7 @@ class DefaultEightCharProvider(EightCharProvider):
     """默认的八字计算（晚子时算第二天）"""
 
     def get_eight_char(self, hour: LunarHour) -> EightChar:
-        from tyme4py.eightchar import EightChar
-        return EightChar(hour.get_year_sixty_cycle(), hour.get_month_sixty_cycle(), hour.get_day_sixty_cycle(), hour.get_sixty_cycle())
+        return hour.get_sixty_cycle_hour().get_eight_char()
 
 
 class LunarSect2EightCharProvider(EightCharProvider):
@@ -25,7 +24,9 @@ class LunarSect2EightCharProvider(EightCharProvider):
 
     def get_eight_char(self, hour: LunarHour) -> EightChar:
         from tyme4py.eightchar import EightChar
-        return EightChar(hour.get_year_sixty_cycle(), hour.get_month_sixty_cycle(), hour.get_lunar_day().get_sixty_cycle(), hour.get_sixty_cycle())
+        from tyme4py.sixtycycle import SixtyCycleHour
+        h: SixtyCycleHour = hour.get_sixty_cycle_hour()
+        return EightChar(h.get_year(), h.get_month(), hour.get_lunar_day().get_sixty_cycle(), h.get_sixty_cycle())
 
 
 class AbstractChildLimitProvider(ChildLimitProvider):
