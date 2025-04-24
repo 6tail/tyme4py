@@ -521,6 +521,7 @@ class SixtyCycleMonth(AbstractTyme):
     def get_first_day(self) -> SixtyCycleDay:
         from tyme4py.solar import SolarTerm
         return SixtyCycleDay.from_solar_day(SolarTerm.from_index(self._year.get_year(), 3+self.get_index_in_year()*2).get_julian_day().get_solar_day())
+
     def get_days(self) -> list[SixtyCycleDay]:
         """
         本月的干支日列表
@@ -652,7 +653,7 @@ class SixtyCycleDay(AbstractTyme):
         :return: 九星 NineStar。
         """
         from tyme4py.solar import SolarDay, SolarTerm
-        d: SolarDay = self.get_solar_day()
+        d: SolarDay = self._solar_day
         dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
         xia_zhi: SolarTerm = dong_zhi.next(12)
         dong_zhi2: SolarTerm = dong_zhi.next(24)
