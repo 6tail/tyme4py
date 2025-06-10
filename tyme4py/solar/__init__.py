@@ -19,6 +19,7 @@ from tyme4py.holiday import LegalHoliday
 if TYPE_CHECKING:
     from tyme4py.lunar import LunarDay, LunarMonth, LunarHour
     from tyme4py.sixtycycle import HideHeavenStemDay, SixtyCycleDay, SixtyCycleHour
+    from tyme4py.rabbyung import RabByungYear, RabByungDay
 
 
 class SolarTerm(LoopTyme):
@@ -133,6 +134,10 @@ class SolarYear(AbstractTyme):
 
     def get_half_years(self) -> list[SolarHalfYear]:
         return [SolarHalfYear.from_index(self._year, i) for i in range(2)]
+
+    def get_rab_byung_year(self) -> RabByungYear:
+        from tyme4py.rabbyung import RabByungYear
+        return RabByungYear.from_year(self._year)
 
 
 class SolarHalfYear(AbstractTyme):
@@ -361,6 +366,10 @@ class SolarWeek(AbstractTyme):
         self._index = index
         self._start = Week(start)
 
+    @classmethod
+    def from_ym(cls, year: int, month: int, index: int, start: int) -> SolarWeek:
+        return cls(year, month, index, start)
+
     def get_solar_month(self) -> SolarMonth:
         """
         :return: 公历月
@@ -480,6 +489,10 @@ class SolarDay(AbstractTyme):
             raise ValueError(f'illegal solar day: {year}-{month}-{day}')
         self._month = m
         self._day = day
+
+    @classmethod
+    def from_ymd(cls, year: int, month: int, day: int) -> SolarDay:
+        return cls(year, month, day)
 
     def get_solar_month(self) -> SolarMonth:
         """
@@ -749,6 +762,10 @@ class SolarDay(AbstractTyme):
     def get_sixty_cycle_day(self) -> SixtyCycleDay:
         from tyme4py.sixtycycle import SixtyCycleDay
         return SixtyCycleDay.from_solar_day(self)
+
+    def get_rab_byung_day(self) -> RabByungDay:
+        from tyme4py.rabbyung import RabByungDay
+        return RabByungDay.from_solar_day(self)
 
     def get_legal_holiday(self) -> LegalHoliday | None:
         """

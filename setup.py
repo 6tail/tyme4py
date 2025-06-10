@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name='tyme4py',
-    version='1.3.2',
-    description='Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历和农历、星座、干支、生肖、节气、法定假日等。',
-    long_description='Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历和农历、星座、干支、生肖、节气、法定假日等。',
+    version='1.3.3',
+    description='Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、星座、干支、生肖、节气、法定假日等。',
+    long_description='Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、星座、干支、生肖、节气、法定假日等。',
     packages=[
         'tyme4py',
         'tyme4py.culture',
@@ -26,6 +26,7 @@ setup(
         'tyme4py.lunar',
         'tyme4py.sixtycycle',
         'tyme4py.solar',
+        'tyme4py.rabbyung',
         'tyme4py.util'
     ],
     url='https://github.com/6tail/tyme4py',
@@ -33,5 +34,5 @@ setup(
     author='6tail',
     author_email='6tail@6tail.cn',
     python_requires='>=3.8.9',
-    keywords='公历 农历 儒略日 星座 干支 节气 法定假日'
+    keywords='公历 农历 藏历 儒略日 星座 干支 节气 法定假日'
 )

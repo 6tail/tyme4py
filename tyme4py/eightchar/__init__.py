@@ -93,10 +93,15 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        offset: int = self._month.get_earth_branch().next(-1).get_index() + self._hour.get_earth_branch().next(-1).get_index()
+        m: int = self._month.get_earth_branch().get_index() - 1
+        if m < 1:
+            m += 12
+        h: int = self._hour.get_earth_branch().get_index() - 1
+        if h < 1:
+            h += 12
+        offset: int = m + h
         offset = (26 if offset >= 14 else 14) - offset
-        offset -= 1
-        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset).get_name() + EarthBranch(2 + offset).get_name())
+        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
 
     def get_body_sign(self) -> SixtyCycle:
         """
@@ -104,8 +109,14 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        offset: int = (self._month.get_earth_branch().get_index() + self._hour.get_earth_branch().get_index() - 1) % 12
-        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset).get_name() + EarthBranch(2 + offset).get_name())
+        m: int = self._month.get_earth_branch().get_index() - 1
+        if m < 1:
+            m += 12
+        h: int = self._hour.get_earth_branch().get_index() + 1
+        offset: int = m + h
+        if offset > 12:
+            offset -= 12
+        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
 
     def get_duty(self) -> Duty:
         """

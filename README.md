@@ -18,6 +18,9 @@ Tyme是一个非常强大的日历工具库，可以看作 [Lunar](https://6tail
      
     # 农历丙寅年四月廿一
     print(solar_day.get_lunar_day().__str__())
+     
+    # 第十七饶迥火虎年四月廿一
+    print(solar_day.get_rab_byung_day().__str__())
 
 ## 文档
 
