@@ -605,13 +605,20 @@ class SolarDay(AbstractTyme):
         当天所在的七十二候
         :return: 七十二候 PhenologyDay
         """
-        term: SolarTerm = self.get_term()
-        dayIndex: int = self.subtract(term.get_julian_day().get_solar_day())
-        index: int = int(dayIndex / 5)
+        d: SolarTermDay = self.get_term_day()
+        day_index: int = d.get_day_index()
+        index: int = day_index // 5
         if index > 2:
             index = 2
-        dayIndex -= index * 5
-        return PhenologyDay(Phenology(term.get_index() * 3 + index), dayIndex)
+        term: SolarTerm = d.get_solar_term()
+        return PhenologyDay(Phenology(term.get_year(), term.get_index() * 3 + index), day_index - index * 5)
+
+    def get_phenology(self) -> Phenology:
+        """
+        当天所在的候
+        :return: 候 Phenology
+        """
+        return self.get_phenology_day().get_phenology()
 
     def get_dog_day(self) -> DogDay | None:
         """
@@ -923,15 +930,20 @@ class SolarTime(AbstractTyme):
         当时所在的节气
         :return: 节气 SolarTerm
         """
-        y: int = self.get_year()
-        i: int = self.get_month() * 2
-        if i == 24:
-            y += 1
-            i = 0
-        term: SolarTerm = SolarTerm(y, i)
-        while self.is_before(term.get_julian_day().get_solar_time()):
+        term: SolarTerm = self.get_solar_day().get_term()
+        if self.is_before(term.get_julian_day().get_solar_time()):
             term = term.next(-1)
         return term
+
+    def get_phenology(self) -> Phenology:
+        """
+        当时所在的候
+        :return: 候 Phenology
+        """
+        p: Phenology = self.get_solar_day().get_phenology()
+        if self.is_before(p.get_julian_day().get_solar_time()):
+            p = p.next(-1)
+        return p
 
     def get_julian_day(self) -> JulianDay:
         """

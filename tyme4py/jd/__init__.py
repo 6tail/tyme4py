@@ -44,8 +44,8 @@ class JulianDay(AbstractTyme):
             month += 12
             year -= 1
         if g:
-            n = int(year / 100)
-            n = 2 - n + int(n / 4)
+            n = int(year * 0.01)
+            n = 2 - n + int(n * 0.25)
         return cls(int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + d + n - 1524.5)
 
     def get_day(self) -> float:
@@ -74,7 +74,7 @@ class JulianDay(AbstractTyme):
         f: float = self._day + 0.5 - d
         if d >= 2299161:
             c: int = int((d - 1867216.25) / 36524.25)
-            d += 1 + c - int(c / 4)
+            d += 1 + c - int(c * 0.25)
         d += 1524
         year: int = int((d - 122.1) / 365.25)
         d -= int(365.25 * year)
@@ -82,11 +82,11 @@ class JulianDay(AbstractTyme):
         d -= int(30.601 * month)
         day: int = d
         if month > 13:
-            month -= 13
-            year -= 4715
+            month -= 12
         else:
-            month -= 1
-            year -= 4716
+            year -= 1
+        month -= 1
+        year -= 4715
         f *= 24
         hour: int = int(f)
         f -= hour
@@ -95,17 +95,8 @@ class JulianDay(AbstractTyme):
         f -= minute
         f *= 60
         second: int = round(f)
-        if second > 59:
-            second -= 60
-            minute += 1
-        if minute > 59:
-            minute -= 60
-            hour += 1
-        if hour > 23:
-            hour -= 24
-            day += 1
         from tyme4py.solar import SolarTime
-        return SolarTime(year, month, day, hour, minute, second)
+        return SolarTime(year, month, day, hour, minute, second) if second < 60 else SolarTime(year, month, day, hour, minute, second - 60).next(60)
 
     def get_week(self) -> Week:
         """

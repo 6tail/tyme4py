@@ -109,11 +109,10 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        m: int = self._month.get_earth_branch().get_index() - 1
-        if m < 1:
-            m += 12
-        h: int = self._hour.get_earth_branch().get_index() + 1
-        offset: int = m + h
+        offset: int = self._month.get_earth_branch().get_index() - 1
+        if offset < 1:
+            offset += 12
+        offset += self._hour.get_earth_branch().get_index() + 1
         if offset > 12:
             offset -= 12
         return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())

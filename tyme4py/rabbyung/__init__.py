@@ -143,7 +143,7 @@ class RabByungYear(AbstractTyme):
 
     def get_month_count(self) -> int:
         """月份数量"""
-        return 13 if self.get_leap_month() else 12
+        return 12 if self.get_leap_month() < 1 else 13
 
     def get_months(self) -> list[RabByungMonth]:
         """所有月份列表"""
@@ -252,21 +252,19 @@ class RabByungMonth(AbstractTyme):
             return RabByungMonth.from_ym(self.get_year(), self.get_month_with_leap())
         m: int = self.index_in_year + 1 + n
         y: RabByungYear = self.year
-        leap_month: int = y.get_leap_month()
         if n > 0:
-            month_count: int = 13 if leap_month > 0 else 12
+            month_count: int = y.get_month_count()
             while m > month_count:
                 m -= month_count
                 y = y.next(1)
-                leap_month = y.get_leap_month()
-                month_count = 13 if leap_month > 0 else 12
+                month_count = y.get_month_count()
         else:
             while m <= 0:
                 y = y.next(-1)
-                leap_month = y.get_leap_month()
-                m += 13 if leap_month > 0 else 12
+                m += y.get_month_count()
 
         leap: bool = False
+        leap_month: int = y.get_leap_month()
         if leap_month > 0:
             if m == leap_month + 1:
                 leap = True
