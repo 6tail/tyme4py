@@ -86,7 +86,7 @@ class AbstractCultureDay(AbstractCulture):
         return self._culture.get_name()
 
     def __str__(self) -> str:
-        return f'{self._culture}第{self.get_day_index() + 1}天'
+        return f'{self.get_name()}第{self.get_day_index() + 1}天'
 
 
 class LoopTyme(AbstractTyme):
