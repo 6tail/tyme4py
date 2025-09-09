@@ -413,3 +413,11 @@ class TestEightChar(unittest.TestCase):
         assert eight_char.get_name() == '辛巳 己亥 己亥 癸酉'
         # 为了不影响其他测试用例，恢复默认八字算法
         LunarHour.provider = DefaultEightCharProvider()
+
+    def test51(self):
+        eight_char: EightChar = EightChar('壬申', '壬寅', '庚辰', '甲申')
+        time_list: [str] = []
+        aa = eight_char.get_solar_times(1801, 2099)
+        for time in aa:
+            time_list.append(time.__str__())
+        assert time_list == ['1812年2月18日 16:00:00', '1992年3月5日 15:00:00', '2052年2月19日 16:00:00']

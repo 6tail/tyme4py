@@ -668,8 +668,7 @@ class SolarDay(AbstractTyme):
         # 芒种后的第1个丙日
         start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(2))
         # 小暑
-        slight_heat: SolarTerm = grain_in_ear.next(2)
-        end: SolarDay = slight_heat.get_julian_day().get_solar_day()
+        end: SolarDay = grain_in_ear.next(2).get_julian_day().get_solar_day()
         # 小暑后的第1个未日
         end = end.next(end.get_lunar_day().get_sixty_cycle().get_earth_branch().steps_to(7))
         if self.is_before(start) or self.is_after(end):

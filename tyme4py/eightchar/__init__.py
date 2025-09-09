@@ -181,6 +181,8 @@ class EightChar(AbstractCulture):
                         s = solar_time.get_second()
 
                     time: SolarTime = SolarTime(solar_day.get_year(), solar_day.get_month(), solar_day.get_day(), hour, mi, s)
+                    if d == 30:
+                        time = time.next(-3600)
                     # 验证一下
                     if time.get_lunar_hour().get_eight_char() == self:
                         l.append(time)

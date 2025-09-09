@@ -589,7 +589,7 @@ class SixtyCycleDay(AbstractTyme):
         index: int = term.get_index() - 3
         if index < 0 and term.get_julian_day().get_solar_day().is_after(spring_solar_day):
             index += 24
-        return cls(solar_day, SixtyCycleMonth(SixtyCycleYear.from_year(lunar_year.get_year()), LunarMonth.from_ym(solar_year, 1).get_sixty_cycle().next(int(floor(index/2)))), lunar_day.get_sixty_cycle())
+        return cls(solar_day, SixtyCycleMonth(SixtyCycleYear.from_year(lunar_year.get_year()), LunarMonth.from_ym(solar_year, 1).get_sixty_cycle().next(int(floor(index * 0.5)))), lunar_day.get_sixty_cycle())
 
     def get_solar_day(self) -> SolarDay:
         """
@@ -655,11 +655,9 @@ class SixtyCycleDay(AbstractTyme):
         from tyme4py.solar import SolarDay, SolarTerm
         d: SolarDay = self._solar_day
         dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
-        xia_zhi: SolarTerm = dong_zhi.next(12)
-        dong_zhi2: SolarTerm = dong_zhi.next(24)
         dong_zhi_solar: SolarDay = dong_zhi.get_julian_day().get_solar_day()
-        xia_zhi_solar: SolarDay = xia_zhi.get_julian_day().get_solar_day()
-        dong_zhi_solar2: SolarDay = dong_zhi2.get_julian_day().get_solar_day()
+        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_julian_day().get_solar_day()
+        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_julian_day().get_solar_day()
         dong_zhi_index: int = dong_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         xia_zhi_index: int = xia_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         dong_zhi_index2: int = dong_zhi_solar2.get_lunar_day().get_sixty_cycle().get_index()
@@ -776,7 +774,7 @@ class SixtyCycleHour(AbstractTyme):
         m: LunarMonth = LunarMonth.from_ym(solar_year, 1)
 
         self._solar_time = solar_time
-        self._day = SixtyCycleDay(solar_time.get_solar_day(), SixtyCycleMonth(y, m.get_sixty_cycle().next(int(floor(index / 2)))), d)
+        self._day = SixtyCycleDay(solar_time.get_solar_day(), SixtyCycleMonth(y, m.get_sixty_cycle().next(int(floor(index * 0.5)))), d)
         self._hour = lunar_hour.get_sixty_cycle()
 
     @classmethod
@@ -859,14 +857,13 @@ class SixtyCycleHour(AbstractTyme):
         from tyme4py.solar import SolarTerm, SolarDay
         solar: SolarDay = self._solar_time.get_solar_day()
         dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
-        xia_zhi: SolarTerm = dong_zhi.next(12)
-        asc: bool = (not solar.is_before(dong_zhi.get_julian_day().get_solar_day())) and solar.is_before(xia_zhi.get_julian_day().get_solar_day())
-        start: int = [8, 5, 2][self.get_day().get_earth_branch().get_index() % 3]
-        if asc:
-            start = 8 - start
-
         earth_branch_index: int = self.get_index_in_day() % 12
-        return NineStar(start + (earth_branch_index if asc else -earth_branch_index))
+        index: int = [8, 5, 2][self.get_day().get_earth_branch().get_index() % 3]
+        if (not solar.is_before(dong_zhi.get_julian_day().get_solar_day())) and solar.is_before(dong_zhi.next(12).get_julian_day().get_solar_day()):
+            index = 8 + earth_branch_index - index
+        else:
+            index -= earth_branch_index
+        return NineStar(index)
 
     def get_eight_char(self) -> EightChar:
         """

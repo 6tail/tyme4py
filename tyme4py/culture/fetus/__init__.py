@@ -114,11 +114,11 @@ class FetusDay(AbstractCulture):
         elif s.startswith('门'):
             s = '占' + s
         s += ' '
-        direction_name: str = self._direction.get_name()
         if Side.IN == self._side:
             s += '房内'
         else:
             s += '外'
+        direction_name: str = self._direction.get_name()
         if Side.OUT == self._side and '北南西东'.find(direction_name) != -1:
             s += '正'
         s += direction_name
