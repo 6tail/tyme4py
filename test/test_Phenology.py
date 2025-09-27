@@ -35,15 +35,15 @@ class TestPhenology(unittest.TestCase):
         jd = p.get_julian_day()
         assert p.get_name() == '麋角解'
         assert jd.get_solar_day().__str__() == '2025年12月26日'
-        assert jd.get_solar_time().__str__() == '2025年12月26日 20:49:39'
+        assert jd.get_solar_time().__str__() == '2025年12月26日 20:49:56'
 
     def test3(self):
         p = SolarDay.from_ymd(2025, 12, 26).get_phenology()
         jd = p.get_julian_day()
         assert p.get_name() == '麋角解'
         assert jd.get_solar_day().__str__() == '2025年12月26日'
-        assert jd.get_solar_time().__str__() == '2025年12月26日 20:49:39'
+        assert jd.get_solar_time().__str__() == '2025年12月26日 20:49:56'
 
     def test4(self):
         assert SolarTime.from_ymd_hms(2025, 12, 26, 20, 49, 38).get_phenology().get_name() == '蚯蚓结'
-        assert SolarTime.from_ymd_hms(2025, 12, 26, 20, 49, 39).get_phenology().get_name() == '麋角解'
+        assert SolarTime.from_ymd_hms(2025, 12, 26, 20, 49, 56).get_phenology().get_name() == '麋角解'

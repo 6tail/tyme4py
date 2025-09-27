@@ -32,16 +32,16 @@ class TestLunarMonth(unittest.TestCase):
         assert LunarMonth.from_ym(2023, 1).get_sixty_cycle().get_name() == '甲寅'
 
     def test8(self):
-        assert LunarMonth.from_ym(2023, -2).get_sixty_cycle().get_name() == '丙辰'
+        assert LunarMonth.from_ym(2023, -2).get_sixty_cycle().get_name() == '乙卯'
 
     def test9(self):
-        assert LunarMonth.from_ym(2023, 3).get_sixty_cycle().get_name() == '丁巳'
+        assert LunarMonth.from_ym(2023, 3).get_sixty_cycle().get_name() == '丙辰'
 
     def test10(self):
         assert LunarMonth.from_ym(2024, 1).get_sixty_cycle().get_name() == '丙寅'
 
     def test11(self):
-        assert LunarMonth.from_ym(2023, 12).get_sixty_cycle().get_name() == '丙寅'
+        assert LunarMonth.from_ym(2023, 12).get_sixty_cycle().get_name() == '乙丑'
 
     def test12(self):
         assert LunarMonth.from_ym(2022, 1).get_sixty_cycle().get_name() == '壬寅'
@@ -92,32 +92,32 @@ class TestLunarMonth(unittest.TestCase):
         assert LunarMonth.from_ym(2012, -4).get_day_count() == 29
 
     def test28(self):
-        assert LunarMonth.from_ym(2023, 9).get_sixty_cycle().__str__() == '癸亥'
+        assert LunarMonth.from_ym(2023, 9).get_sixty_cycle().__str__() == '壬戌'
 
     def test29(self):
         d: LunarDay = SolarDay(2023, 10, 7).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '辛酉'
         assert d.get_sixty_cycle_day().get_month().__str__() == '辛酉'
 
     def test30(self):
         d: LunarDay = SolarDay(2023, 10, 8).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '辛酉'
         assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test31(self):
         d: LunarDay = SolarDay(2023, 10, 15).get_lunar_day()
         assert d.get_lunar_month().get_name() == '九月'
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
         assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test32(self):
         d: LunarDay = SolarDay(2023, 11, 7).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
         assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test33(self):
         d: LunarDay = SolarDay(2023, 11, 8).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
         assert d.get_sixty_cycle_day().get_month().__str__() == '癸亥'
 
     def test34(self):
@@ -144,24 +144,24 @@ class TestLunarMonth(unittest.TestCase):
 
     def test37(self):
         d: LunarDay = SolarDay(2023, 10, 30).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
         assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test38(self):
         d: LunarDay = SolarDay(2023, 10, 19).get_lunar_day()
-        assert d.get_lunar_month().get_sixty_cycle().__str__() == '癸亥'
+        assert d.get_lunar_month().get_sixty_cycle().__str__() == '壬戌'
         assert d.get_sixty_cycle_day().get_month().__str__() == '壬戌'
 
     def test39(self):
         m: LunarMonth = LunarMonth.from_ym(2023, 11)
         assert m.__str__() == '农历癸卯年十一月'
-        assert m.get_sixty_cycle().__str__() == '乙丑'
+        assert m.get_sixty_cycle().__str__() == '甲子'
 
     def test40(self):
         assert LunarMonth.from_ym(2018, 6).get_sixty_cycle().__str__() == '己未'
 
     def test41(self):
-        assert LunarMonth.from_ym(2017, 12).get_sixty_cycle().__str__() == '甲寅'
+        assert LunarMonth.from_ym(2017, 12).get_sixty_cycle().__str__() == '癸丑'
 
     def test42(self):
         assert LunarMonth.from_ym(2018, 1).get_sixty_cycle().__str__() == '甲寅'

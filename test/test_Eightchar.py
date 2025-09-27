@@ -148,8 +148,8 @@ class TestEightChar(unittest.TestCase):
         assert child_limit.get_month_count() == 9
         assert child_limit.get_day_count() == 2
         assert child_limit.get_hour_count() == 10
-        assert child_limit.get_minute_count() == 6
-        assert child_limit.get_end_time().__str__() == '2030年12月12日 06:57:00'
+        assert child_limit.get_minute_count() == 28
+        assert child_limit.get_end_time().__str__() == '2030年12月12日 07:19:00'
 
     def test12(self):
         """童限测试"""
@@ -158,8 +158,8 @@ class TestEightChar(unittest.TestCase):
         assert child_limit.get_month_count() == 9
         assert child_limit.get_day_count() == 10
         assert child_limit.get_hour_count() == 1
-        assert child_limit.get_minute_count() == 52
-        assert child_limit.get_end_time().__str__() == '2020年3月21日 11:22:00'
+        assert child_limit.get_minute_count() == 42
+        assert child_limit.get_end_time().__str__() == '2020年3月21日 11:12:00'
 
     def test13(self):
         """大运测试"""

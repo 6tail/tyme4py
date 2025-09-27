@@ -6,7 +6,7 @@ from math import floor, ceil
 from typing import TYPE_CHECKING
 
 from tyme4py import AbstractTyme, LoopTyme
-from tyme4py.culture import Twenty, Direction, KitchenGodSteed, Week, Duty, Phase, God, Taboo
+from tyme4py.culture import Twenty, Direction, KitchenGodSteed, Week, Duty, Phase, God, Taboo, PhaseDay
 from tyme4py.culture.star.twentyeight import TwentyEightStar
 from tyme4py.culture.fetus import FetusMonth, FetusDay
 from tyme4py.culture.ren import MinorRen
@@ -434,7 +434,7 @@ class LunarMonth(AbstractTyme):
         :return: 干支 SixtyCycle。
         """
         from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
-        return SixtyCycle(HeavenStem((self._year.get_sixty_cycle().get_heaven_stem().get_index() + 1) * 2 + self._index_in_year).get_name() + EarthBranch(self._index_in_year + 2).get_name())
+        return SixtyCycle(HeavenStem(self._year.get_sixty_cycle().get_heaven_stem().get_index() * 2 + self._month + 1).get_name() + EarthBranch(self._month + 1).get_name())
 
     def get_nine_star(self) -> NineStar:
         """
@@ -774,12 +774,26 @@ class LunarDay(AbstractTyme):
         """
         return FetusDay.from_lunar_day(self)
 
+    def get_phase_day(self) -> PhaseDay:
+        """
+        月相第几天
+        :return: 月相第几天
+        """
+        today = self.get_solar_day()
+        m = self._month.next(1)
+        p = Phase.from_index(m.get_year(), m.get_month(), 0)
+        d = p.get_solar_day()
+        while d.is_after(today):
+            p = p.next(-1)
+            d = p.get_solar_day()
+        return PhaseDay(p, today.subtract(d))
+
     def get_phase(self) -> Phase:
         """
         月相
         :return: 月相 Phase。
         """
-        return Phase(self._day - 1)
+        return self.get_phase_day().get_phase()
 
     def get_solar_day(self) -> SolarDay:
         """

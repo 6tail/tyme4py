@@ -2,15 +2,19 @@
 from __future__ import annotations
 
 import re
+from math import floor
 from typing import TYPE_CHECKING
 
-from tyme4py import LoopTyme, AbstractCulture
+from tyme4py import LoopTyme, AbstractCulture, AbstractCultureDay
+from tyme4py.util import ShouXingUtil
 
 if TYPE_CHECKING:
     from tyme4py.culture.star.seven import SevenStar
     from tyme4py.culture.star.twentyeight import TwentyEightStar
-    from tyme4py.lunar import LunarDay
+    from tyme4py.lunar import LunarDay, LunarMonth
     from tyme4py.sixtycycle import SixtyCycle, EarthBranch
+    from tyme4py.jd import JulianDay
+    from tyme4py.solar import SolarTime, SolarDay
 
 
 class Animal(LoopTyme):
@@ -369,22 +373,83 @@ class Luck(LoopTyme):
 
 class Phase(LoopTyme):
     """月相"""
-    NAMES: [str] = ['朔月', '既朔月', '蛾眉新月', '蛾眉新月', '蛾眉月', '夕月', '上弦月', '上弦月', '九夜月', '宵月', '宵月', '宵月', '渐盈凸月', '小望月', '望月', '既望月', '立待月', '居待月', '寝待月', '更待月', '渐亏凸月', '下弦月', '下弦月', '有明月', '有明月', '蛾眉残月', '蛾眉残月', '残月', '晓月', '晦月']
+    NAMES: [str] = ['新月', '蛾眉月', '上弦月', '盈凸月', '满月', '亏凸月', '下弦月', '残月']
     """名称"""
+    """农历年"""
+    _lunar_year: int
+    """农历月"""
+    _lunar_month: int
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, lunar_year: int, lunar_month: int, index_or_name: int | str):
         super().__init__(self.NAMES, index_or_name)
+        from tyme4py.lunar import LunarMonth
+        if isinstance(index_or_name, int):
+            m = LunarMonth.from_ym(lunar_year, lunar_month).next(index_or_name // self.get_size())
+            self._lunar_year = m.get_year()
+            self._lunar_month = m.get_month()
+        else:
+            self._lunar_year = lunar_year
+            self._lunar_month = lunar_month
 
     @classmethod
-    def from_name(cls, name: str) -> Phase:
-        return cls(name)
+    def from_name(cls, lunar_year: int, lunar_month: int, name: str) -> Phase:
+        return cls(lunar_year, lunar_month, name)
 
     @classmethod
-    def from_index(cls, index: int) -> Phase:
-        return cls(index)
+    def from_index(cls, lunar_year: int, lunar_month: int, index: int) -> Phase:
+        return cls(lunar_year, lunar_month, index)
 
     def next(self, n: int) -> Phase:
-        return Phase(self.next_index(n))
+        from tyme4py.lunar import LunarMonth
+        size = self.get_size()
+        i = self.get_index() + n
+        if i < 0:
+            i -= size
+        i //= size
+        m = LunarMonth.from_ym(self._lunar_year, self._lunar_month)
+        if i != 0:
+            m = m.next(i)
+        return Phase(m.get_year(), m.get_month(), self.next_index(n))
+
+    def _get_start_solar_time(self) -> SolarTime:
+        from tyme4py.jd import JulianDay
+        from tyme4py.lunar import LunarDay
+        n = floor((self._lunar_year - 2000) * 365.2422 / 29.53058886)
+        i = 0
+        d = LunarDay.from_ymd(self._lunar_year, self._lunar_month, 1).get_solar_day()
+        while True:
+            t = ShouXingUtil.msa_lon_t((n + i) * ShouXingUtil.PI_2) * 36525
+            if not JulianDay.from_julian_day(t + JulianDay.J2000 + ShouXingUtil.ONE_THIRD - ShouXingUtil.dt_t(t)).get_solar_day().is_before(d):
+                break
+            i += 1
+        t = ShouXingUtil.msa_lon_t((n + i + [0, 90, 180, 270][self.get_index() // 2] / 360.0) * ShouXingUtil.PI_2) * 36525
+        return JulianDay.from_julian_day(t + JulianDay.J2000 + ShouXingUtil.ONE_THIRD - ShouXingUtil.dt_t(t)).get_solar_time()
+
+    def get_solar_time(self) -> SolarTime:
+        t = self._get_start_solar_time()
+        if self.get_index() % 2 == 1:
+            return t.next(1)
+        return t
+
+    def get_solar_day(self) -> SolarDay:
+        d = self._get_start_solar_time().get_solar_day()
+        if self.get_index() % 2 == 1:
+            return d.next(1)
+        return d
+
+
+class PhaseDay(AbstractCultureDay):
+    """月相第几天"""
+
+    def __init__(self, phase: Phase, day_index: int):
+        super().__init__(phase, day_index)
+
+    def get_phase(self) -> Phase:
+        """
+        月相
+        :return: 月相
+        """
+        return self.get_culture()
 
 
 class Sixty(LoopTyme):

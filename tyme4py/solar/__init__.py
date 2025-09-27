@@ -5,7 +5,7 @@ from math import floor, ceil
 from typing import TYPE_CHECKING
 
 from tyme4py import LoopTyme, AbstractCultureDay, AbstractTyme
-from tyme4py.culture import Week, Constellation
+from tyme4py.culture import Week, Constellation, PhaseDay, Phase
 from tyme4py.culture.dog import DogDay, Dog
 from tyme4py.culture.nine import NineDay, Nine
 from tyme4py.culture.phenology import PhenologyDay, Phenology
@@ -787,6 +787,26 @@ class SolarDay(AbstractTyme):
         """
         return SolarFestival.from_ymd(self.get_year(), self.get_month(), self._day)
 
+    def get_phase_day(self) -> PhaseDay:
+        """
+        月相第几天
+        :return: 月相第几天
+        """
+        month = self.get_lunar_day().get_lunar_month().next(1)
+        p = Phase.from_index(month.get_year(), month.get_month(), 0)
+        d = p.get_solar_day()
+        while d.is_after(self):
+            p = p.next(-1)
+            d = p.get_solar_day()
+        return PhaseDay(p, self.subtract(d))
+
+    def get_phase(self) -> Phase:
+        """
+        月相
+        :return: 月相 Phase。
+        """
+        return self.get_phase_day().get_phase()
+
 
 class SolarTime(AbstractTyme):
     """公历时刻"""
@@ -983,3 +1003,14 @@ class SolarTime(AbstractTyme):
         """
         from tyme4py.sixtycycle import SixtyCycleHour
         return SixtyCycleHour.from_solar_time(self)
+
+    def get_phase(self) -> Phase:
+        """
+        月相
+        :return: 月相 Phase。
+        """
+        month = self.get_lunar_hour().get_lunar_day().get_lunar_month().next(1)
+        p = Phase.from_index(month.get_year(), month.get_month(), 0)
+        while p.get_solar_time().is_after(self):
+            p = p.next(-1)
+        return p
