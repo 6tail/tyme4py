@@ -386,7 +386,7 @@ class Phase(LoopTyme):
         if isinstance(index_or_name, int):
             m = LunarMonth.from_ym(lunar_year, lunar_month).next(index_or_name // self.get_size())
             self._lunar_year = m.get_year()
-            self._lunar_month = m.get_month()
+            self._lunar_month = m.get_month_with_leap()
         else:
             self._lunar_year = lunar_year
             self._lunar_month = lunar_month
@@ -409,21 +409,22 @@ class Phase(LoopTyme):
         m = LunarMonth.from_ym(self._lunar_year, self._lunar_month)
         if i != 0:
             m = m.next(i)
-        return Phase(m.get_year(), m.get_month(), self.next_index(n))
+        return Phase(m.get_year(), m.get_month_with_leap(), self.next_index(n))
 
     def _get_start_solar_time(self) -> SolarTime:
         from tyme4py.jd import JulianDay
         from tyme4py.lunar import LunarDay
         n = floor((self._lunar_year - 2000) * 365.2422 / 29.53058886)
         i = 0
+        jd = JulianDay.J2000 + ShouXingUtil.ONE_THIRD
         d = LunarDay.from_ymd(self._lunar_year, self._lunar_month, 1).get_solar_day()
         while True:
             t = ShouXingUtil.msa_lon_t((n + i) * ShouXingUtil.PI_2) * 36525
-            if not JulianDay.from_julian_day(t + JulianDay.J2000 + ShouXingUtil.ONE_THIRD - ShouXingUtil.dt_t(t)).get_solar_day().is_before(d):
+            if not JulianDay.from_julian_day(jd + t - ShouXingUtil.dt_t(t)).get_solar_day().is_before(d):
                 break
             i += 1
         t = ShouXingUtil.msa_lon_t((n + i + [0, 90, 180, 270][self.get_index() // 2] / 360.0) * ShouXingUtil.PI_2) * 36525
-        return JulianDay.from_julian_day(t + JulianDay.J2000 + ShouXingUtil.ONE_THIRD - ShouXingUtil.dt_t(t)).get_solar_time()
+        return JulianDay.from_julian_day(jd + t - ShouXingUtil.dt_t(t)).get_solar_time()
 
     def get_solar_time(self) -> SolarTime:
         t = self._get_start_solar_time()

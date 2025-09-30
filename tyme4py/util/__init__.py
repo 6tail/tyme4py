@@ -597,8 +597,7 @@ class ShouXingUtil:
         v /= ShouXingUtil.__XL0[0]
         t2 = t * t
         t3 = t2 * t
-        v += (-0.0728 - 2.7702 * t - 1.1019 * t2 - 0.0996 * t3) / ShouXingUtil.SECOND_PER_RAD
-        return v
+        return v + (-0.0728 - 2.7702 * t - 1.1019 * t2 - 0.0996 * t3) / ShouXingUtil.SECOND_PER_RAD
 
     @staticmethod
     def m_lon(t: float, n: int) -> float:
@@ -635,26 +634,21 @@ class ShouXingUtil:
                 c += f[j] * cos(f[j + 1] + t * f[j + 2] + t2 * f[j + 3] + t3 * f[j + 4] + t4 * f[j + 5])
             v += c * tn
             tn *= t
-        v /= ShouXingUtil.SECOND_PER_RAD
-        return v
+        return v / ShouXingUtil.SECOND_PER_RAD
 
     @staticmethod
     def gxc_sun_lon(t: float) -> float:
-        v = -0.043126 + 628.301955 * t - 0.000002732 * t * t
-        e = 0.016708634 - 0.000042037 * t - 0.0000001267 * t * t
-        return -20.49552 * (1 + e * cos(v)) / ShouXingUtil.SECOND_PER_RAD
+        return -20.49552 * (1 + (0.016708634 - 0.000042037 * t - 0.0000001267 * t * t) * cos(-0.043126 + 628.301955 * t - 0.000002732 * t * t)) / ShouXingUtil.SECOND_PER_RAD
 
     @staticmethod
     def ev(t: float) -> float:
         f = 628.307585 * t
-        return 628.332 + 21 * sin(1.527 + f) + 0.44 * sin(1.48 + f * 2) + 0.129 * sin(5.82 + f) * t + 0.00055 * sin(
-            4.21 + f) * t * t
+        return 628.332 + 21 * sin(1.527 + f) + 0.44 * sin(1.48 + f * 2) + 0.129 * sin(5.82 + f) * t + 0.00055 * sin(4.21 + f) * t * t
 
     @staticmethod
     def mv(t: float) -> float:
         v = 8399.71 - 914 * sin(0.7848 + 8328.691425 * t + 0.0001523 * t * t)
-        v -= 179 * sin(2.543 + 15542.7543 * t) + 160 * sin(0.1874 + 7214.0629 * t) + 62 * sin(3.14 + 16657.3828 * t) + 34 * sin(4.827 + 16866.9323 * t) + 22 * sin(4.9 + 23871.4457 * t) + 12 * sin(2.59 + 14914.4523 * t) + 7 * sin(0.23 + 6585.7609 * t) + 5 * sin(0.9 + 25195.624 * t) + 5 * sin(2.32 - 7700.3895 * t) + 5 * sin(3.88 + 8956.9934 * t) + 5 * sin(0.49 + 7771.3771 * t)
-        return v
+        return v - (179 * sin(2.543 + 15542.7543 * t) + 160 * sin(0.1874 + 7214.0629 * t) + 62 * sin(3.14 + 16657.3828 * t) + 34 * sin(4.827 + 16866.9323 * t) + 22 * sin(4.9 + 23871.4457 * t) + 12 * sin(2.59 + 14914.4523 * t) + 7 * sin(0.23 + 6585.7609 * t) + 5 * sin(0.9 + 25195.624 * t) + 5 * sin(2.32 - 7700.3895 * t) + 5 * sin(3.88 + 8956.9934 * t) + 5 * sin(0.49 + 7771.3771 * t))
 
     @staticmethod
     def sa_lon(t: float, n: int) -> float:
@@ -684,8 +678,7 @@ class ShouXingUtil:
         t1 = (y - ShouXingUtil.__DT_AT[i]) / (ShouXingUtil.__DT_AT[i + 5] - ShouXingUtil.__DT_AT[i]) * 10
         t2 = t1 * t1
         t3 = t2 * t1
-        return ShouXingUtil.__DT_AT[i + 1] + ShouXingUtil.__DT_AT[i + 2] * t1 + ShouXingUtil.__DT_AT[i + 3] * t2 + \
-            ShouXingUtil.__DT_AT[i + 4] * t3
+        return ShouXingUtil.__DT_AT[i + 1] + ShouXingUtil.__DT_AT[i + 2] * t1 + ShouXingUtil.__DT_AT[i + 3] * t2 + ShouXingUtil.__DT_AT[i + 4] * t3
 
     @staticmethod
     def dt_t(t: float) -> float:
@@ -698,13 +691,11 @@ class ShouXingUtil:
         v = ShouXingUtil.ev(t)
         t += (w - ShouXingUtil.sa_lon(t, 10)) / v
         v = ShouXingUtil.ev(t)
-        t += (w - ShouXingUtil.sa_lon(t, -1)) / v
-        return t
+        return t + (w - ShouXingUtil.sa_lon(t, -1)) / v
 
     @staticmethod
     def msa_lon(t: float, mn: int, sn: int) -> float:
-        return ShouXingUtil.m_lon(t, mn) + (-3.4E-6) - (
-                ShouXingUtil.e_lon(t, sn) + ShouXingUtil.gxc_sun_lon(t) + ShouXingUtil.PI)
+        return ShouXingUtil.m_lon(t, mn) + (-3.4E-6) - (ShouXingUtil.e_lon(t, sn) + ShouXingUtil.gxc_sun_lon(t) + ShouXingUtil.PI)
 
     @staticmethod
     def msa_lon_t(w: float) -> float:
@@ -713,17 +704,14 @@ class ShouXingUtil:
         t += (w - ShouXingUtil.msa_lon(t, 3, 3)) / v
         v = ShouXingUtil.mv(t) - ShouXingUtil.ev(t)
         t += (w - ShouXingUtil.msa_lon(t, 20, 10)) / v
-        t += (w - ShouXingUtil.msa_lon(t, -1, 60)) / v
-        return t
+        return t + (w - ShouXingUtil.msa_lon(t, -1, 60)) / v
 
     @staticmethod
     def sa_lon_t2(w: float) -> float:
         v = 628.3319653318
         t = (w - 1.75347 - ShouXingUtil.PI) / v
-        t -= (0.000005297 * t * t + 0.0334166 * cos(4.669257 + 628.307585 * t) + 0.0002061 * cos(
-            2.67823 + 628.307585 * t) * t) / v
-        t += (w - ShouXingUtil.e_lon(t, 8) - ShouXingUtil.PI + (20.5 + 17.2 * sin(2.1824 - 33.75705 * t)) / ShouXingUtil.SECOND_PER_RAD) / v
-        return t
+        t -= (0.000005297 * t * t + 0.0334166 * cos(4.669257 + 628.307585 * t) + 0.0002061 * cos(2.67823 + 628.307585 * t) * t) / v
+        return t + (w - ShouXingUtil.e_lon(t, 8) - ShouXingUtil.PI + (20.5 + 17.2 * sin(2.1824 - 33.75705 * t)) / ShouXingUtil.SECOND_PER_RAD) / v
 
     @staticmethod
     def msa_lon_t2(w: float) -> float:
@@ -733,9 +721,7 @@ class ShouXingUtil:
         t -= (-0.00003309 * t2 + 0.10976 * cos(0.784758 + 8328.6914246 * t + 0.000152292 * t2) + 0.02224 * cos(0.18740 + 7214.0628654 * t - 0.00021848 * t2) - 0.03342 * cos(4.669257 + 628.307585 * t)) / v
         t2 = t * t
         n = ShouXingUtil.m_lon(t, 20) - (4.8950632 + 628.3319653318 * t + 0.000005297 * t2 + 0.0334166 * cos(4.669257 + 628.307585 * t) + 0.0002061 * cos(2.67823 + 628.307585 * t) * t + 0.000349 * cos(4.6261 + 1256.61517 * t) - 20.5 / ShouXingUtil.SECOND_PER_RAD)
-        v = 7771.38 - 914 * sin(0.7848 + 8328.691425 * t + 0.0001523 * t2) - 179 * sin(2.543 + 15542.7543 * t) - 160 * sin(0.1874 + 7214.0629 * t)
-        t += (w - n) / v
-        return t
+        return t + (w - n) / (7771.38 - 914 * sin(0.7848 + 8328.691425 * t + 0.0001523 * t2) - 179 * sin(2.543 + 15542.7543 * t) - 160 * sin(0.1874 + 7214.0629 * t))
 
     @staticmethod
     def qi_high(w: float) -> float:

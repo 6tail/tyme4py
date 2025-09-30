@@ -781,7 +781,7 @@ class LunarDay(AbstractTyme):
         """
         today = self.get_solar_day()
         m = self._month.next(1)
-        p = Phase.from_index(m.get_year(), m.get_month(), 0)
+        p = Phase.from_index(m.get_year(), m.get_month_with_leap(), 0)
         d = p.get_solar_day()
         while d.is_after(today):
             p = p.next(-1)

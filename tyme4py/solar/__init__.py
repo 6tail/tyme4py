@@ -793,7 +793,7 @@ class SolarDay(AbstractTyme):
         :return: 月相第几天
         """
         month = self.get_lunar_day().get_lunar_month().next(1)
-        p = Phase.from_index(month.get_year(), month.get_month(), 0)
+        p = Phase.from_index(month.get_year(), month.get_month_with_leap(), 0)
         d = p.get_solar_day()
         while d.is_after(self):
             p = p.next(-1)
@@ -1010,7 +1010,7 @@ class SolarTime(AbstractTyme):
         :return: 月相 Phase。
         """
         month = self.get_lunar_hour().get_lunar_day().get_lunar_month().next(1)
-        p = Phase.from_index(month.get_year(), month.get_month(), 0)
+        p = Phase.from_index(month.get_year(), month.get_month_with_leap(), 0)
         while p.get_solar_time().is_after(self):
             p = p.next(-1)
         return p
