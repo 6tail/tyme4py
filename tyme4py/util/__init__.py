@@ -511,7 +511,7 @@ class ShouXingUtil:
         2322147.76  # 1645-09-21
     )
     # 1645-09-23开始7567个节气修正表
-    __QB = ""
+    __QB = ''
     __SHUO_KB = (
         1457698.231017, 29.53067166, 1546082.512234, 29.53085106, 1640640.735300, 29.53060000, 1642472.151543,
         29.53085439,
@@ -519,42 +519,42 @@ class ShouXingUtil:
         29.53060000,
         1907360.704700, 29.53060000, 1936596.224900, 29.53060000, 1939135.675300, 29.53060000, 1947168.00)
     # 619-01-21开始16598个朔日修正表 d0=1947168
-    __SB = ""
+    __SB = ''
 
     @staticmethod
     def __decode(s: str) -> str:
-        o = "0000000000"
+        o = '0000000000'
         o2 = o + o
-        s = s.replace("J", "00")
-        s = s.replace("I", "000")
-        s = s.replace("H", "0000")
-        s = s.replace("G", "00000")
-        s = s.replace("t", "02")
-        s = s.replace("s", "002")
-        s = s.replace("r", "0002")
-        s = s.replace("q", "00002")
-        s = s.replace("p", "000002")
-        s = s.replace("o", "0000002")
-        s = s.replace("n", "00000002")
-        s = s.replace("m", "000000002")
-        s = s.replace("l", "0000000002")
-        s = s.replace("k", "01")
-        s = s.replace("j", "0101")
-        s = s.replace("i", "001")
-        s = s.replace("h", "001001")
-        s = s.replace("g", "0001")
-        s = s.replace("f", "00001")
-        s = s.replace("e", "000001")
-        s = s.replace("d", "0000001")
-        s = s.replace("c", "00000001")
-        s = s.replace("b", "000000001")
-        s = s.replace("a", "0000000001")
-        s = s.replace("A", o2 + o2 + o2)
-        s = s.replace("B", o2 + o2 + o)
-        s = s.replace("C", o2 + o2)
-        s = s.replace("D", o2 + o)
-        s = s.replace("E", o2)
-        s = s.replace("F", o)
+        s = s.replace('J', '00')
+        s = s.replace('I', '000')
+        s = s.replace('H', '0000')
+        s = s.replace('G', '00000')
+        s = s.replace('t', '02')
+        s = s.replace('s', '002')
+        s = s.replace('r', '0002')
+        s = s.replace('q', '00002')
+        s = s.replace('p', '000002')
+        s = s.replace('o', '0000002')
+        s = s.replace('n', '00000002')
+        s = s.replace('m', '000000002')
+        s = s.replace('l', '0000000002')
+        s = s.replace('k', '01')
+        s = s.replace('j', '0101')
+        s = s.replace('i', '001')
+        s = s.replace('h', '001001')
+        s = s.replace('g', '0001')
+        s = s.replace('f', '00001')
+        s = s.replace('e', '000001')
+        s = s.replace('d', '0000001')
+        s = s.replace('c', '00000001')
+        s = s.replace('b', '000000001')
+        s = s.replace('a', '0000000001')
+        s = s.replace('A', o2 + o2 + o2)
+        s = s.replace('B', o2 + o2 + o)
+        s = s.replace('C', o2 + o2)
+        s = s.replace('D', o2 + o)
+        s = s.replace('E', o2)
+        s = s.replace('F', o)
         return s
 
     @staticmethod
@@ -760,7 +760,7 @@ class ShouXingUtil:
     @staticmethod
     def calc_shuo(jd: float) -> int:
         if len(ShouXingUtil.__SB) < 1:
-            ShouXingUtil.__SB = ShouXingUtil.__decode("EqoFscDcrFpmEsF2DfFideFelFpFfFfFiaipqti1ksttikptikqckstekqttgkqttgkqteksttikptikq2fjstgjqttjkqttgkqtekstfkptikq2tijstgjiFkirFsAeACoFsiDaDiADc1AFbBfgdfikijFifegF1FhaikgFag1E2btaieeibggiffdeigFfqDfaiBkF1kEaikhkigeidhhdiegcFfakF1ggkidbiaedksaFffckekidhhdhdikcikiakicjF1deedFhFccgicdekgiFbiaikcfi1kbFibefgEgFdcFkFeFkdcfkF1kfkcickEiFkDacFiEfbiaejcFfffkhkdgkaiei1ehigikhdFikfckF1dhhdikcfgjikhfjicjicgiehdikcikggcifgiejF1jkieFhegikggcikFegiegkfjebhigikggcikdgkaFkijcfkcikfkcifikiggkaeeigefkcdfcfkhkdgkegieidhijcFfakhfgeidieidiegikhfkfckfcjbdehdikggikgkfkicjicjF1dbidikFiggcifgiejkiegkigcdiegfggcikdbgfgefjF1kfegikggcikdgFkeeijcfkcikfkekcikdgkabhkFikaffcfkhkdgkegbiaekfkiakicjhfgqdq2fkiakgkfkhfkfcjiekgFebicggbedF1jikejbbbiakgbgkacgiejkijjgigfiakggfggcibFifjefjF1kfekdgjcibFeFkijcfkfhkfkeaieigekgbhkfikidfcjeaibgekgdkiffiffkiakF1jhbakgdki1dj1ikfkicjicjieeFkgdkicggkighdF1jfgkgfgbdkicggfggkidFkiekgijkeigfiskiggfaidheigF1jekijcikickiggkidhhdbgcfkFikikhkigeidieFikggikhkffaffijhidhhakgdkhkijF1kiakF1kfheakgdkifiggkigicjiejkieedikgdfcggkigieeiejfgkgkigbgikicggkiaideeijkefjeijikhkiggkiaidheigcikaikffikijgkiahi1hhdikgjfifaakekighie1hiaikggikhkffakicjhiahaikggikhkijF1kfejfeFhidikggiffiggkigicjiekgieeigikggiffiggkidheigkgfjkeigiegikifiggkidhedeijcfkFikikhkiggkidhh1ehigcikaffkhkiggkidhh1hhigikekfiFkFikcidhh1hitcikggikhkfkicjicghiediaikggikhkijbjfejfeFhaikggifikiggkigiejkikgkgieeigikggiffiggkigieeigekijcijikggifikiggkideedeijkefkfckikhkiggkidhh1ehijcikaffkhkiggkidhh1hhigikhkikFikfckcidhh1hiaikgjikhfjicjicgiehdikcikggifikigiejfejkieFhegikggifikiggfghigkfjeijkhigikggifikiggkigieeijcijcikfksikifikiggkidehdeijcfdckikhkiggkhghh1ehijikifffffkhsFngErD1pAfBoDd1BlEtFqA2AqoEpDqElAEsEeB2BmADlDkqBtC1FnEpDqnEmFsFsAFnllBbFmDsDiCtDmAB2BmtCgpEplCpAEiBiEoFqFtEqsDcCnFtADnFlEgdkEgmEtEsCtDmADqFtAFrAtEcCqAE1BoFqC1F1DrFtBmFtAC2ACnFaoCgADcADcCcFfoFtDlAFgmFqBq2bpEoAEmkqnEeCtAE1bAEqgDfFfCrgEcBrACfAAABqAAB1AAClEnFeCtCgAADqDoBmtAAACbFiAAADsEtBqAB2FsDqpFqEmFsCeDtFlCeDtoEpClEqAAFrAFoCgFmFsFqEnAEcCqFeCtFtEnAEeFtAAEkFnErAABbFkADnAAeCtFeAfBoAEpFtAABtFqAApDcCGJ")
+            ShouXingUtil.__SB = ShouXingUtil.__decode('EqoFscDcrFpmEsF2DfFideFelFpFfFfFiaipqti1ksttikptikqckstekqttgkqttgkqteksttikptikq2fjstgjqttjkqttgkqtekstfkptikq2tijstgjiFkirFsAeACoFsiDaDiADc1AFbBfgdfikijFifegF1FhaikgFag1E2btaieeibggiffdeigFfqDfaiBkF1kEaikhkigeidhhdiegcFfakF1ggkidbiaedksaFffckekidhhdhdikcikiakicjF1deedFhFccgicdekgiFbiaikcfi1kbFibefgEgFdcFkFeFkdcfkF1kfkcickEiFkDacFiEfbiaejcFfffkhkdgkaiei1ehigikhdFikfckF1dhhdikcfgjikhfjicjicgiehdikcikggcifgiejF1jkieFhegikggcikFegiegkfjebhigikggcikdgkaFkijcfkcikfkcifikiggkaeeigefkcdfcfkhkdgkegieidhijcFfakhfgeidieidiegikhfkfckfcjbdehdikggikgkfkicjicjF1dbidikFiggcifgiejkiegkigcdiegfggcikdbgfgefjF1kfegikggcikdgFkeeijcfkcikfkekcikdgkabhkFikaffcfkhkdgkegbiaekfkiakicjhfgqdq2fkiakgkfkhfkfcjiekgFebicggbedF1jikejbbbiakgbgkacgiejkijjgigfiakggfggcibFifjefjF1kfekdgjcibFeFkijcfkfhkfkeaieigekgbhkfikidfcjeaibgekgdkiffiffkiakF1jhbakgdki1dj1ikfkicjicjieeFkgdkicggkighdF1jfgkgfgbdkicggfggkidFkiekgijkeigfiskiggfaidheigF1jekijcikickiggkidhhdbgcfkFikikhkigeidieFikggikhkffaffijhidhhakgdkhkijF1kiakF1kfheakgdkifiggkigicjiejkieedikgdfcggkigieeiejfgkgkigbgikicggkiaideeijkefjeijikhkiggkiaidheigcikaikffikijgkiahi1hhdikgjfifaakekighie1hiaikggikhkffakicjhiahaikggikhkijF1kfejfeFhidikggiffiggkigicjiekgieeigikggiffiggkidheigkgfjkeigiegikifiggkidhedeijcfkFikikhkiggkidhh1ehigcikaffkhkiggkidhh1hhigikekfiFkFikcidhh1hitcikggikhkfkicjicghiediaikggikhkijbjfejfeFhaikggifikiggkigiejkikgkgieeigikggiffiggkigieeigekijcijikggifikiggkideedeijkefkfckikhkiggkidhh1ehijcikaffkhkiggkidhh1hhigikhkikFikfckcidhh1hiaikgjikhfjicjicgiehdikcikggifikigiejfejkieFhegikggifikiggfghigkfjeijkhigikggifikiggkigieeijcijcikfksikifikiggkidehdeijcfdckikhkiggkhghh1ehijikifffffkhsFngErD1pAfBoDd1BlEtFqA2AqoEpDqElAEsEeB2BmADlDkqBtC1FnEpDqnEmFsFsAFnllBbFmDsDiCtDmAB2BmtCgpEplCpAEiBiEoFqFtEqsDcCnFtADnFlEgdkEgmEtEsCtDmADqFtAFrAtEcCqAE1BoFqC1F1DrFtBmFtAC2ACnFaoCgADcADcCcFfoFtDlAFgmFqBq2bpEoAEmkqnEeCtAE1bAEqgDfFfCrgEcBrACfAAABqAAB1AAClEnFeCtCgAADqDoBmtAAACbFiAAADsEtBqAB2FsDqpFqEmFsCeDtFlCeDtoEpClEqAAFrAFoCgFmFsFqEnAEcCqFeCtFtEnAEeFtAAEkFnErAABbFkADnAAeCtFeAfBoAEpFtAABtFqAApDcCGJ')
         size = len(ShouXingUtil.__SHUO_KB)
         d = 0
         pc = 14
@@ -784,16 +784,16 @@ class ShouXingUtil:
             d = floor(ShouXingUtil.shuo_low(floor((jd + pc - 2451551) / 29.5306) * ShouXingUtil.PI * 2) + 0.5)
             index = floor((jd - f2) / 29.5306)
             n = ShouXingUtil.__SB[index:index + 1]
-            if "1" == n:
+            if '1' == n:
                 d += 1
-            elif "2" == n:
+            elif '2' == n:
                 d -= 1
         return d
 
     @staticmethod
     def calc_qi(jd: float) -> int:
         if len(ShouXingUtil.__QB) < 1:
-            ShouXingUtil.__QB = ShouXingUtil.__decode("FrcFs22AFsckF2tsDtFqEtF1posFdFgiFseFtmelpsEfhkF2anmelpFlF1ikrotcnEqEq2FfqmcDsrFor22FgFrcgDscFs22FgEeFtE2sfFs22sCoEsaF2tsD1FpeE2eFsssEciFsFnmelpFcFhkF2tcnEqEpFgkrotcnEqrEtFermcDsrE222FgBmcmr22DaEfnaF222sD1FpeForeF2tssEfiFpEoeFssD1iFstEqFppDgFstcnEqEpFg11FscnEqrAoAF2ClAEsDmDtCtBaDlAFbAEpAAAAAD2FgBiBqoBbnBaBoAAAAAAAEgDqAdBqAFrBaBoACdAAf1AACgAAAeBbCamDgEifAE2AABa1C1BgFdiAAACoCeE1ADiEifDaAEqAAFe1AcFbcAAAAAF1iFaAAACpACmFmAAAAAAAACrDaAAADG0")
+            ShouXingUtil.__QB = ShouXingUtil.__decode('FrcFs22AFsckF2tsDtFqEtF1posFdFgiFseFtmelpsEfhkF2anmelpFlF1ikrotcnEqEq2FfqmcDsrFor22FgFrcgDscFs22FgEeFtE2sfFs22sCoEsaF2tsD1FpeE2eFsssEciFsFnmelpFcFhkF2tcnEqEpFgkrotcnEqrEtFermcDsrE222FgBmcmr22DaEfnaF222sD1FpeForeF2tssEfiFpEoeFssD1iFstEqFppDgFstcnEqEpFg11FscnEqrAoAF2ClAEsDmDtCtBaDlAFbAEpAAAAAD2FgBiBqoBbnBaBoAAAAAAAEgDqAdBqAFrBaBoACdAAf1AACgAAAeBbCamDgEifAE2AABa1C1BgFdiAAACoCeE1ADiEifDaAEqAAFe1AcFbcAAAAAF1iFaAAACpACmFmAAAAAAAACrDaAAADG0')
         size = len(ShouXingUtil.__QI_KB)
         d = 0
         pc = 7
@@ -819,9 +819,9 @@ class ShouXingUtil:
             # 找定气修正值
             index = floor((jd - f2) / 365.2422 * 24)
             n = ShouXingUtil.__QB[index:index + 1]
-            if "1" == n:
+            if '1' == n:
                 d += 1
-            elif "2" == n:
+            elif '2' == n:
                 d -= 1
         return d
 

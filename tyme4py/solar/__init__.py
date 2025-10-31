@@ -29,7 +29,7 @@ class SolarTerm(LoopTyme):
     _year: int
     """年"""
     _cursory_julian_day: float
-    """粗略的儒略日"""
+    """儒略日（用于日历，只精确到日中午12:00）"""
 
     def __init__(self, year: int, index_or_name: int | str):
         super().__init__(self.NAMES, index_or_name)
@@ -68,15 +68,26 @@ class SolarTerm(LoopTyme):
 
     def get_julian_day(self) -> JulianDay:
         """
-        儒略日
+        儒略日（精确到秒）
         :return : 儒略日
         """
         return JulianDay.from_julian_day(ShouXingUtil.qi_accurate2(self._cursory_julian_day) + JulianDay.J2000)
+
+    def get_solar_day(self) -> SolarDay:
+        """
+        公历日（用于日历）
+        @return: 公历日
+        """
+        return JulianDay.from_julian_day(self._cursory_julian_day + JulianDay.J2000).get_solar_day()
 
     def get_year(self) -> int:
         return self._year
 
     def get_cursory_julian_day(self) -> float:
+        """
+        儒略日（用于日历，只精确到日中午12:00）
+        @return: 儒略日
+        """
         return self._cursory_julian_day
 
 
@@ -584,10 +595,10 @@ class SolarDay(AbstractTyme):
             y += 1
             i = 0
         term: SolarTerm = SolarTerm(y, i)
-        day: SolarDay = term.get_julian_day().get_solar_day()
+        day: SolarDay = term.get_solar_day()
         while self.is_before(day):
             term = term.next(-1)
-            day = term.get_julian_day().get_solar_day()
+            day = term.get_solar_day()
         return SolarTermDay(term, self.subtract(day))
 
     def get_solar_week(self, start: int) -> SolarWeek:
@@ -628,7 +639,7 @@ class SolarDay(AbstractTyme):
         # 夏至
         xia_zhi: SolarTerm = SolarTerm(self.get_year(), 12)
         # 第1个庚日
-        start: SolarDay = xia_zhi.get_julian_day().get_solar_day()
+        start: SolarDay = xia_zhi.get_solar_day()
         # 第3个庚日，即初伏第1天
         start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(6) + 20)
         days: int = self.subtract(start)
@@ -648,7 +659,7 @@ class SolarDay(AbstractTyme):
         start = start.next(10)
         days = self.subtract(start)
         # 立秋
-        if xia_zhi.next(3).get_julian_day().get_solar_day().is_after(start):
+        if xia_zhi.next(3).get_solar_day().is_after(start):
             if days < 10:
                 return DogDay(Dog(1), days + 10)
             start = start.next(10)
@@ -664,11 +675,11 @@ class SolarDay(AbstractTyme):
         """
         # 芒种
         grain_in_ear: SolarTerm = SolarTerm(self.get_year(), 11)
-        start: SolarDay = grain_in_ear.get_julian_day().get_solar_day()
+        start: SolarDay = grain_in_ear.get_solar_day()
         # 芒种后的第1个丙日
         start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(2))
         # 小暑
-        end: SolarDay = grain_in_ear.next(2).get_julian_day().get_solar_day()
+        end: SolarDay = grain_in_ear.next(2).get_solar_day()
         # 小暑后的第1个未日
         end = end.next(end.get_lunar_day().get_sixty_cycle().get_earth_branch().steps_to(7))
         if self.is_before(start) or self.is_after(end):
@@ -684,7 +695,7 @@ class SolarDay(AbstractTyme):
         term: SolarTerm = self.get_term()
         if term.is_qi():
             term = term.next(-1)
-        day_index: int = self.subtract(term.get_julian_day().get_solar_day())
+        day_index: int = self.subtract(term.get_solar_day())
         start_index: int = (term.get_index() - 1) * 3
         data: str = '93705542220504xx1513904541632524533533105544806564xx7573304542018584xx95'[start_index: start_index + 6]
         days: int = 0
@@ -720,9 +731,9 @@ class SolarDay(AbstractTyme):
         :return: 数九天 NineDay
         """
         year: int = self.get_year()
-        start: SolarDay = SolarTerm(year + 1, 0).get_julian_day().get_solar_day()
+        start: SolarDay = SolarTerm(year + 1, 0).get_solar_day()
         if self.is_before(start):
-            start = SolarTerm(year, 0).get_julian_day().get_solar_day()
+            start = SolarTerm(year, 0).get_solar_day()
 
         end: SolarDay = start.next(81)
         if self.is_before(start) or (not self.is_before(end)):

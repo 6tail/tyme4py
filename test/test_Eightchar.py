@@ -421,3 +421,6 @@ class TestEightChar(unittest.TestCase):
         for time in aa:
             time_list.append(time.__str__())
         assert time_list == ['1812年2月18日 16:00:00', '1992年3月5日 15:00:00', '2052年2月19日 16:00:00']
+
+    def test52(self):
+        assert SolarTime.from_ymd_hms(1034, 10, 2, 20, 0, 0).get_lunar_hour().get_eight_char().__str__() == '甲戌 癸酉 甲戌 甲戌'

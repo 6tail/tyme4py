@@ -14,19 +14,15 @@ from tyme4py.enums import Gender, YinYang
 if TYPE_CHECKING:
     from tyme4py.lunar import LunarYear
     from tyme4py.solar import SolarTime, SolarTerm, SolarDay
-    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleYear
+    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleYear, ThreePillars
 
 
 class EightChar(AbstractCulture):
     """
     八字
     """
-    _year: SixtyCycle
-    """年柱"""
-    _month: SixtyCycle
-    """月柱"""
-    _day: SixtyCycle
-    """日柱"""
+    _three_pillars: ThreePillars
+    """三柱"""
     _hour: SixtyCycle
     """时柱"""
 
@@ -37,10 +33,8 @@ class EightChar(AbstractCulture):
         :param day: 日干支
         :param hour: 时干支
         """
-        from tyme4py.sixtycycle import SixtyCycle
-        self._year = year if isinstance(year, SixtyCycle) else SixtyCycle(year)
-        self._month = month if isinstance(month, SixtyCycle) else SixtyCycle(month)
-        self._day = day if isinstance(day, SixtyCycle) else SixtyCycle(day)
+        from tyme4py.sixtycycle import SixtyCycle, ThreePillars
+        self._three_pillars = ThreePillars(year if isinstance(year, SixtyCycle) else SixtyCycle(year), month if isinstance(month, SixtyCycle) else SixtyCycle(month), day if isinstance(day, SixtyCycle) else SixtyCycle(day))
         self._hour = hour if isinstance(hour, SixtyCycle) else SixtyCycle(hour)
 
     def get_year(self) -> SixtyCycle:
@@ -48,21 +42,21 @@ class EightChar(AbstractCulture):
         年柱
         :return: 干支 SixtyCycle
         """
-        return self._year
+        return self._three_pillars.get_year()
 
     def get_month(self) -> SixtyCycle:
         """
         月柱
         :return: 干支 SixtyCycle
         """
-        return self._month
+        return self._three_pillars.get_month()
 
     def get_day(self) -> SixtyCycle:
         """
         日柱
         :return:  干支 SixtyCycle
         """
-        return self._day
+        return self._three_pillars.get_day()
 
     def get_hour(self) -> SixtyCycle:
         """
@@ -77,7 +71,8 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle
-        return SixtyCycle(self._month.get_heaven_stem().next(1).get_name() + self._month.get_earth_branch().next(3).get_name())
+        m = self.get_month()
+        return SixtyCycle(m.get_heaven_stem().next(1).get_name() + m.get_earth_branch().next(3).get_name())
 
     def get_fetal_breath(self) -> SixtyCycle:
         """
@@ -85,7 +80,8 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch
-        return SixtyCycle(self._day.get_heaven_stem().next(5).get_name() + EarthBranch(13 - self._day.get_earth_branch().get_index()).get_name())
+        d = self.get_day()
+        return SixtyCycle(d.get_heaven_stem().next(5).get_name() + EarthBranch(13 - d.get_earth_branch().get_index()).get_name())
 
     def get_own_sign(self) -> SixtyCycle:
         """
@@ -93,7 +89,7 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        m: int = self._month.get_earth_branch().get_index() - 1
+        m: int = self.get_month().get_earth_branch().get_index() - 1
         if m < 1:
             m += 12
         h: int = self._hour.get_earth_branch().get_index() - 1
@@ -101,7 +97,7 @@ class EightChar(AbstractCulture):
             h += 12
         offset: int = m + h
         offset = (26 if offset >= 14 else 14) - offset
-        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
+        return SixtyCycle(HeavenStem((self.get_year().get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
 
     def get_body_sign(self) -> SixtyCycle:
         """
@@ -109,13 +105,13 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        offset: int = self._month.get_earth_branch().get_index() - 1
+        offset: int = self.get_month().get_earth_branch().get_index() - 1
         if offset < 1:
             offset += 12
         offset += self._hour.get_earth_branch().get_index() + 1
         if offset > 12:
             offset -= 12
-        return SixtyCycle(HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
+        return SixtyCycle(HeavenStem((self.get_year().get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
 
     def get_duty(self) -> Duty:
         """
@@ -123,10 +119,10 @@ class EightChar(AbstractCulture):
         :return: 建除十二值神
         """
         warnings.warn('get_duty() is deprecated, please use SixtyCycleDay.get_duty() instead.', DeprecationWarning)
-        return Duty(self._day.get_earth_branch().get_index() - self._month.get_earth_branch().get_index())
+        return Duty(self.get_day().get_earth_branch().get_index() - self.get_month().get_earth_branch().get_index())
 
     def get_name(self) -> str:
-        return f'{self._year} {self._month} {self._day} {self._hour}'
+        return f'{self._three_pillars} {self._hour}'
 
     def get_solar_times(self, start_year: int, end_year: int) -> list[SolarTime]:
         """
@@ -138,14 +134,17 @@ class EightChar(AbstractCulture):
         from tyme4py.sixtycycle import HeavenStem
         from tyme4py.solar import SolarTime, SolarTerm
         l: [SolarTime] = []
+        year = self.get_year()
+        month = self.get_month()
+        day = self.get_day()
         # 月地支距寅月的偏移值
-        m: int = self._month.get_earth_branch().next(-2).get_index()
+        m: int = month.get_earth_branch().next(-2).get_index()
         # 月天干要一致
-        if not HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + m) == self._month.get_heaven_stem():
+        if not HeavenStem((year.get_heaven_stem().get_index() + 1) * 2 + m) == month.get_heaven_stem():
             return l
 
         # 1年的立春是辛酉，序号57
-        y: int = self._year.next(-57).get_index() + 1
+        y: int = year.next(-57).get_index() + 1
         # 节令偏移值
         m *= 2
         # 时辰地支转时刻
@@ -167,7 +166,7 @@ class EightChar(AbstractCulture):
             if solar_time.get_year() >= start_year:
                 # 日干支和节令干支的偏移值
                 solar_day: SolarDay = solar_time.get_solar_day()
-                d: int = self._day.next(-solar_day.get_lunar_day().get_sixty_cycle().get_index()).get_index()
+                d: int = day.next(-solar_day.get_lunar_day().get_sixty_cycle().get_index()).get_index()
                 if d > 0:
                     # 从节令推移天数
                     solar_day = solar_day.next(d)

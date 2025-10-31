@@ -66,7 +66,7 @@ class LunarFestival(AbstractTyme):
                 return cls(FestivalType.DAY, LunarDay(year, int(data[4: 6], 10), int(data[6:], 10)), None, data)
             elif festival_type == 1:
                 solar_term: SolarTerm = SolarTerm(year, int(data[4:], 10))
-                return cls(FestivalType.TERM, solar_term.get_julian_day().get_solar_day().get_lunar_day(), solar_term, data)
+                return cls(FestivalType.TERM, solar_term.get_solar_day().get_lunar_day(), solar_term, data)
             elif festival_type == 2:
                 return cls(FestivalType.EVE, LunarDay(year + 1, 1, 1).next(-1), None, data)
             else:
@@ -93,7 +93,7 @@ class LunarFestival(AbstractTyme):
         while matcher:
             data: str = matcher.group()
             solar_term: SolarTerm = SolarTerm(year, int(data[4:], 10))
-            lunar_day: LunarDay = solar_term.get_julian_day().get_solar_day().get_lunar_day()
+            lunar_day: LunarDay = solar_term.get_solar_day().get_lunar_day()
             if lunar_day.get_year() == year and lunar_day.get_month() == month and lunar_day.get_day() == day:
                 return cls(FestivalType.TERM, lunar_day, solar_term, data)
             last_position = matcher.end()

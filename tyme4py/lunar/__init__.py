@@ -22,7 +22,7 @@ from tyme4py.util import ShouXingUtil
 
 if TYPE_CHECKING:
     from tyme4py.solar import SolarDay, SolarTime, SolarTerm
-    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleDay, SixtyCycleHour
+    from tyme4py.sixtycycle import SixtyCycle, SixtyCycleDay, SixtyCycleHour, ThreePillars
 
 
 class LunarYear(AbstractTyme):
@@ -739,9 +739,9 @@ class LunarDay(AbstractTyme):
         from tyme4py.solar import SolarTerm
         d: SolarDay = self.get_solar_day()
         dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
-        dong_zhi_solar: SolarDay = dong_zhi.get_julian_day().get_solar_day()
-        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_julian_day().get_solar_day()
-        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_julian_day().get_solar_day()
+        dong_zhi_solar: SolarDay = dong_zhi.get_solar_day()
+        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_solar_day()
+        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_solar_day()
         dong_zhi_index: int = dong_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         xia_zhi_index: int = xia_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         dong_zhi_index2: int = dong_zhi_solar2.get_lunar_day().get_sixty_cycle().get_index()
@@ -868,9 +868,17 @@ class LunarDay(AbstractTyme):
 
     def get_minor_ren(self) -> MinorRen:
         """
+        小六壬
         :return: 小六壬
         """
         return self.get_lunar_month().get_minor_ren().next(self._day - 1)
+
+    def get_three_pillars(self) -> ThreePillars:
+        """
+        三柱
+        @return: 三柱
+        """
+        return self.get_sixty_cycle_day().get_three_pillars()
 
 
 class LunarHour(AbstractTyme):

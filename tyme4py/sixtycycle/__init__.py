@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
-from math import floor
+from math import floor, ceil
 from typing import TYPE_CHECKING
 
 from tyme4py import LoopTyme, AbstractCulture, AbstractCultureDay, AbstractTyme
@@ -17,6 +17,97 @@ from tyme4py.enums import YinYang, HideHeavenStemType
 if TYPE_CHECKING:
     from tyme4py.solar import SolarDay, SolarTime
     from tyme4py.culture.star.twentyeight import TwentyEightStar
+
+
+class ThreePillars(AbstractCulture):
+    """
+    三柱
+    """
+    _year: SixtyCycle
+    """年柱"""
+    _month: SixtyCycle
+    """月柱"""
+    _day: SixtyCycle
+    """日柱"""
+
+    def __init__(self, year: SixtyCycle | str, month: SixtyCycle | str, day: SixtyCycle | str):
+        """
+        :param year: 年干支
+        :param month: 月干支
+        :param day: 日干支
+        """
+        self._year = year if isinstance(year, SixtyCycle) else SixtyCycle(year)
+        self._month = month if isinstance(month, SixtyCycle) else SixtyCycle(month)
+        self._day = day if isinstance(day, SixtyCycle) else SixtyCycle(day)
+
+    def get_year(self) -> SixtyCycle:
+        """
+        年柱
+        :return: 干支 SixtyCycle
+        """
+        return self._year
+
+    def get_month(self) -> SixtyCycle:
+        """
+        月柱
+        :return: 干支 SixtyCycle
+        """
+        return self._month
+
+    def get_day(self) -> SixtyCycle:
+        """
+        日柱
+        :return:  干支 SixtyCycle
+        """
+        return self._day
+
+    def get_name(self) -> str:
+        return f'{self._year} {self._month} {self._day}'
+
+    def get_solar_days(self, start_year: int, end_year: int) -> list[SolarDay]:
+        """
+        三柱转公历日列表
+        :param start_year: 开始年份，支持1-9999年
+        :param end_year: 结束年份，支持1-9999年
+        :return: 公历日 SolarDay的列表
+        """
+        from tyme4py.solar import SolarDay, SolarTerm
+        l: [SolarDay] = []
+        # 月地支距寅月的偏移值
+        m: int = self._month.get_earth_branch().next(-2).get_index()
+        # 月天干要一致
+        if not HeavenStem((self._year.get_heaven_stem().get_index() + 1) * 2 + m) == self._month.get_heaven_stem():
+            return l
+
+        # 1年的立春是辛酉，序号57
+        y: int = self._year.next(-57).get_index() + 1
+        # 节令偏移值
+        m *= 2
+        base_year: int = start_year - 1
+        if base_year > y:
+            y += 60 * int(ceil((base_year - y) / 60.0))
+
+        while y <= end_year:
+            # 立春为寅月的开始
+            term: SolarTerm = SolarTerm(y, 3)
+            # 节令推移，年干支和月干支就都匹配上了
+            if m > 0:
+                term = term.next(m)
+
+            solar_day: SolarDay = term.get_solar_day()
+            if solar_day.get_year() >= start_year:
+                # 日干支和节令干支的偏移值
+                d: int = self._day.next(-solar_day.get_lunar_day().get_sixty_cycle().get_index()).get_index()
+                if d > 0:
+                    # 从节令推移天数
+                    solar_day = solar_day.next(d)
+
+                # 验证一下
+                if solar_day.get_sixty_cycle_day().get_three_pillars() == self:
+                    l.append(solar_day)
+            y += 60
+        return l
+
 
 class EarthBranch(LoopTyme):
     """地支（地元）"""
@@ -520,7 +611,7 @@ class SixtyCycleMonth(AbstractTyme):
 
     def get_first_day(self) -> SixtyCycleDay:
         from tyme4py.solar import SolarTerm
-        return SixtyCycleDay.from_solar_day(SolarTerm.from_index(self._year.get_year(), 3+self.get_index_in_year()*2).get_julian_day().get_solar_day())
+        return SixtyCycleDay.from_solar_day(SolarTerm.from_index(self._year.get_year(), 3+self.get_index_in_year()*2).get_solar_day())
 
     def get_days(self) -> list[SixtyCycleDay]:
         """
@@ -576,7 +667,7 @@ class SixtyCycleDay(AbstractTyme):
         from tyme4py.solar import SolarTerm, SolarDay
         from tyme4py.lunar import LunarYear, LunarMonth, LunarDay
         solar_year: int = solar_day.get_year()
-        spring_solar_day: SolarDay = SolarTerm.from_index(solar_year, 3).get_julian_day().get_solar_day()
+        spring_solar_day: SolarDay = SolarTerm.from_index(solar_year, 3).get_solar_day()
         lunar_day: LunarDay = solar_day.get_lunar_day()
         lunar_year: LunarYear = lunar_day.get_lunar_month().get_lunar_year()
         if lunar_year.get_year() == solar_year:
@@ -587,7 +678,7 @@ class SixtyCycleDay(AbstractTyme):
                 lunar_year = lunar_year.next(1)
         term: SolarTerm = solar_day.get_term()
         index: int = term.get_index() - 3
-        if index < 0 and term.get_julian_day().get_solar_day().is_after(spring_solar_day):
+        if index < 0 and term.get_solar_day().is_after(spring_solar_day):
             index += 24
         return cls(solar_day, SixtyCycleMonth(SixtyCycleYear.from_year(lunar_year.get_year()), LunarMonth.from_ym(solar_year, 1).get_sixty_cycle().next(int(floor(index * 0.5)))), lunar_day.get_sixty_cycle())
 
@@ -655,9 +746,9 @@ class SixtyCycleDay(AbstractTyme):
         from tyme4py.solar import SolarDay, SolarTerm
         d: SolarDay = self._solar_day
         dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
-        dong_zhi_solar: SolarDay = dong_zhi.get_julian_day().get_solar_day()
-        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_julian_day().get_solar_day()
-        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_julian_day().get_solar_day()
+        dong_zhi_solar: SolarDay = dong_zhi.get_solar_day()
+        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_solar_day()
+        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_solar_day()
         dong_zhi_index: int = dong_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         xia_zhi_index: int = xia_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
         dong_zhi_index2: int = dong_zhi_solar2.get_lunar_day().get_sixty_cycle().get_index()
@@ -735,6 +826,9 @@ class SixtyCycleDay(AbstractTyme):
             h = h.next(7200)
             l.append(h)
         return l
+
+    def get_three_pillars(self) -> ThreePillars:
+        return ThreePillars(self.get_year(), self.get_month(), self.get_sixty_cycle())
 
 
 class SixtyCycleHour(AbstractTyme):
