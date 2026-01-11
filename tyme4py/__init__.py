@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Union, List
 
 
 class Culture(ABC):
@@ -17,7 +18,7 @@ class Culture(ABC):
 
 class Tyme(Culture):
     @abstractmethod
-    def next(self, n: int) -> Tyme | None:
+    def next(self, n: int) -> Union[Tyme, None]:
         """
         推移
         :param n:推移步数
@@ -59,7 +60,7 @@ class AbstractTyme(AbstractCulture, Tyme):
         pass
 
     @abstractmethod
-    def next(self, n: int) -> Tyme | None:
+    def next(self, n: int) -> Union[Tyme, None]:
         pass
 
 
@@ -91,12 +92,12 @@ class AbstractCultureDay(AbstractCulture):
 
 class LoopTyme(AbstractTyme):
     """可轮回的Tyme"""
-    _names: []
+    _names: List[str]
     """名称列表"""
     _index: int
     """索引，从0开始"""
 
-    def __init__(self, names: [str], index_or_name: int | str):
+    def __init__(self, names: List[str], index_or_name: Union[int, str]):
         """
         :param names: 名称列表
         :param index_or_name: 索引，支持负数，自动轮转; 名称
@@ -104,7 +105,7 @@ class LoopTyme(AbstractTyme):
         self._names = names
         self._index = self._index_of_by(index_or_name)
 
-    def _index_of_by(self, index_or_name: int | str) -> int:
+    def _index_of_by(self, index_or_name: Union[int, str]) -> int:
         """
         :param index_or_name: 索引或名称
         :return: 索引
@@ -155,5 +156,5 @@ class LoopTyme(AbstractTyme):
         return self.index_of(target_index - self._index, self.get_size())
 
     @abstractmethod
-    def next(self, n: int) -> LoopTyme | None:
+    def next(self, n: int) -> Union[LoopTyme, None]:
         pass

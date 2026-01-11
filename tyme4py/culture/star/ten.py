@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 
 
 class TenStar(LoopTyme):
     """十神"""
-    NAMES: [str] = ['比肩', '劫财', '食神', '伤官', '偏财', '正财', '七杀', '正官', '偏印', '正印']
+    NAMES: List[str] = ['比肩', '劫财', '食神', '伤官', '偏财', '正财', '七杀', '正官', '偏印', '正印']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

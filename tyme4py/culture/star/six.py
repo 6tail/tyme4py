@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 
 
 class SixStar(LoopTyme):
     """六曜"""
-    NAMES: [str] = ['先胜', '友引', '先负', '佛灭', '大安', '赤口']
+    NAMES: List[str] = ['先胜', '友引', '先负', '佛灭', '大安', '赤口']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

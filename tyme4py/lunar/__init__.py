@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import warnings
 from math import floor, ceil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 
-from tyme4py import AbstractTyme, LoopTyme
+from tyme4py import LoopTyme
 from tyme4py.culture import Twenty, Direction, KitchenGodSteed, Week, Duty, Phase, God, Taboo, PhaseDay
 from tyme4py.culture.star.twentyeight import TwentyEightStar
 from tyme4py.culture.fetus import FetusMonth, FetusDay
@@ -18,6 +18,7 @@ from tyme4py.eightchar.provider import EightCharProvider
 from tyme4py.eightchar.provider.impl import DefaultEightCharProvider
 from tyme4py.festival import LunarFestival
 from tyme4py.jd import JulianDay
+from tyme4py.unit import YearUnit, MonthUnit, WeekUnit, DayUnit, SecondUnit
 from tyme4py.util import ShouXingUtil
 
 if TYPE_CHECKING:
@@ -25,21 +26,20 @@ if TYPE_CHECKING:
     from tyme4py.sixtycycle import SixtyCycle, SixtyCycleDay, SixtyCycleHour, ThreePillars
 
 
-class LunarYear(AbstractTyme):
+class LunarYear(YearUnit):
     """
     农历年
     依据国家标准《农历的编算和颁行》GB/T 33661-2017，农历年以正月初一开始，至除夕结束。
     """
     _isInit: bool = False
-    _LEAP: [[int]] = []
-    _year: int
+    _LEAP: List[List[int]] = []
 
     @staticmethod
     def _init():
         if LunarYear._isInit:
             return
         chars: str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@'
-        months: [str] = [
+        months: List[str] = [
             '080b0r0j0j0j0C0j0j0C0j0j0j0C0j0C0j0C0F0j0V0V0V0u0j0j0C0j0j0j0j0V0C0j1v0u0C0V1v0C0b080u110u0C0j0C1v9K1v2z0j1vmZbl1veN3s1v0V0C2S1v0V0C2S2o0C0j1Z1c2S1v0j1c0j2z1v0j1c0j392H0b2_2S0C0V0j1c0j2z0C0C0j0j1c0j0N250j0C0j0b081n080b0C0C0C1c0j0N',
             '0r1v1c1v0V0V0F0V0j0C0j0C0j0V0j0u1O0j0C0V0j0j0j0V0b080u0r0u080b0j0j0C0V0C0V0j0b080V0u080b0j0j0u0j1v0u080b1c0j080b0j0V0j0j0V0C0N1v0j1c0j0j1v2g1v420j1c0j2z1v0j1v5Q9z1v4l0j1vfn1v420j9z4l1v1v2S1c0j1v2S3s1v0V0C2S1v1v2S1c0j1v2S2_0b0j2_2z0j1c0j',
             '0z0j0j0j0C0j0j0C0j0j0j0C0j0C0j0j0j0j0m0j0C0j0j0C0j0j0j0j0b0V0j0j0C0j0j0j0j0V0j0j0j0V0b0V0V0C0V0C0j0j0b080u110u0V0C0j0N0j0b080b080b0j0r0b0r0b0j0j0j0j0C0j0b0r0C0j0b0j0C0C0j0j0j0j0j0j0j0j0j0b110j0b0j0j0j0C0j0C0j0j0j0j0b080b080b0V080b080b0j0j0j0j0j0j0V0j0j0u1v0j0j0j0C0j0j0j0V0C0N1c0j0C0C0j0j0j1n080b0j0V0C0j0C0C2g0j1c0j0j1v2g1v0j0j1v7N0j1c0j3L0j0j1v5Q1Z5Q1v4lfn1v420j1v5Q1Z5Q1v4l1v2z1v',
@@ -56,7 +56,7 @@ class LunarYear(AbstractTyme):
         for m in months:
             n: int = 0
             size: int = int(m.__len__() / 2)
-            l: [int] = []
+            l: List[int] = []
             for y in range(0, size):
                 z: int = y * 2
                 t: int = 0
@@ -69,22 +69,19 @@ class LunarYear(AbstractTyme):
             LunarYear._LEAP.append(l)
         LunarYear._isInit = True
 
-    def __init__(self, year: int):
-        LunarYear._init()
+    @staticmethod
+    def validate(year: int) -> None:
         if year < -1 or year > 9999:
             raise ValueError(f'illegal lunar year: {year}')
-        self._year = year
+
+    def __init__(self, year: int):
+        LunarYear._init()
+        LunarYear.validate(year)
+        super().__init__(year)
 
     @classmethod
     def from_year(cls, year: int) -> LunarYear:
         return cls(year)
-
-    def get_year(self) -> int:
-        """
-        年
-        :return: 返回为农历年数字，范围为-1到9999。
-        """
-        return self._year
 
     def get_day_count(self) -> int:
         """
@@ -92,7 +89,7 @@ class LunarYear(AbstractTyme):
         :return: 返回为数字，从正月初一到除夕的总天数。
         """
         n: int = 0
-        months: [LunarMonth] = self.get_months()
+        months: List[LunarMonth] = self.get_months()
         for i in range(0, months.__len__()):
             n += months[i].get_day_count()
         return n
@@ -159,12 +156,12 @@ class LunarYear(AbstractTyme):
         """
         return LunarMonth.from_ym(self._year, 1)
 
-    def get_months(self) -> list[LunarMonth]:
+    def get_months(self) -> List[LunarMonth]:
         """
         农历月列表
         :return: 农历月 LunarMonth 的列表，从正月到十二月，包含闰月。
         """
-        l: [LunarMonth] = []
+        l: List[LunarMonth] = []
         m: LunarMonth = self.get_first_month()
         while m.get_year() == self._year:
             l.append(m)
@@ -184,10 +181,10 @@ class LunarSeason(LoopTyme):
     农历季节
     从正月开始，依次为：孟春、仲春、季春、孟夏、仲夏、季夏、孟秋、仲秋、季秋、孟冬、仲冬、季冬。
     """
-    NAMES: [str] = ['孟春', '仲春', '季春', '孟夏', '仲夏', '季夏', '孟秋', '仲秋', '季秋', '孟冬', '仲冬', '季冬']
+    NAMES: List[str] = ['孟春', '仲春', '季春', '孟夏', '仲夏', '季夏', '孟秋', '仲秋', '季秋', '孟冬', '仲冬', '季冬']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -202,82 +199,30 @@ class LunarSeason(LoopTyme):
         return LunarSeason(self.next_index(n))
 
 
-class LunarMonth(AbstractTyme):
+class LunarMonth(MonthUnit):
     """
     农历月
     农历月以初一开始，大月30天，小月29天。
     """
-    _cache: {str: [int]} = {}
-    NAMES: [str] = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-    _year: LunarYear
-    """农历年"""
-    _month: int
-    """月"""
+    NAMES: List[str] = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
     _leap: bool
     """是否闰月"""
-    _day_count: int
-    """天数"""
-    _index_in_year: int
-    """位于当年的索引，0-12"""
-    _first_julian_day: JulianDay
-    """初一的儒略日"""
 
-    def __init__(self, year: int, month: int, cache: [int] or None = None):
+    @staticmethod
+    def validate(year: int, month: int) -> None:
+        if month == 0 or month > 12 or month < -12:
+            raise ValueError(f'illegal lunar month: {month}')
+        if month < 0 and -month != LunarYear.from_year(year).get_leap_month():
+            raise ValueError(f'illegal leap month {-month} in lunar year {year}')
+
+    def __init__(self, year: int, month: int):
         """
         :param year: 农历年
         :param month: 农历月，闰月为负
-        :param cache: 缓存[农历年(int)，农历月(int,闰月为负)，天数(int)，位于当年的索引(int)，初一的儒略日(double)]
         """
-        from tyme4py.jd import JulianDay
-        # 从缓存初始化
-        if cache:
-            m: int = cache[1]
-            self._year = LunarYear(cache[0])
-            self._month = abs(m)
-            self._leap = m < 0
-            self._day_count = cache[2]
-            self._index_in_year = cache[3]
-            self._first_julian_day = JulianDay(cache[4])
-        else:
-            current_year: LunarYear = LunarYear(year)
-            current_leap_month: int = current_year.get_leap_month()
-            if month == 0 or month > 12 or month < -12:
-                raise ValueError(f'illegal lunar month: {month}')
-            leap: bool = month < 0
-            m: int = abs(month)
-            if leap and m != current_leap_month:
-                raise ValueError(f'illegal leap month {m} in lunar year {year}')
-
-            from tyme4py.solar import SolarTerm
-            # 冬至
-            dong_zhi_jd: float = SolarTerm(year, 0).get_cursory_julian_day()
-            # 冬至前的初一，今年首朔的日月黄经差
-            w: int = ShouXingUtil.calc_shuo(dong_zhi_jd)
-            if w > dong_zhi_jd:
-                w -= 29.53
-
-            # 正常情况正月初一为第3个朔日，但有些特殊的
-            offset: int = 2
-            if 8 < year < 24:
-                offset = 1
-            elif LunarYear(year - 1).get_leap_month() > 10 and year != 239 and year != 240:
-                offset = 3
-
-            # 位于当年的索引
-            index: int = m - 1
-            if leap or (0 < current_leap_month < m):
-                index += 1
-            self._index_in_year = index
-            # 本月初一
-            w += 29.5306 * (offset + index)
-            first_day: int = ShouXingUtil.calc_shuo(w)
-            self._first_julian_day = JulianDay(JulianDay.J2000 + first_day)
-
-            # 本月天数 = 下月初一 - 本月初一
-            self._day_count = ~~(ShouXingUtil.calc_shuo(w + 29.5306) - first_day)
-            self._year = current_year
-            self._month = m
-            self._leap = leap
+        LunarMonth.validate(year, month)
+        super().__init__(year, abs(month))
+        self._leap = month < 0
 
     @classmethod
     def from_ym(cls, year: int, month: int) -> LunarMonth:
@@ -287,36 +232,32 @@ class LunarMonth(AbstractTyme):
         :param month:  农历月，支持1到12，如果为闰月的，使用负数，即-3代表闰三月。
         :return: LunarMonth
         """
-        m: LunarMonth
-        key: str = f'{year:04}{month:02}'
-        try:
-            cache: [int] = LunarMonth._cache[key]
-            m = cls(0, 0, cache)
-        except KeyError:
-            m = cls(year, month)
-            LunarMonth._cache[key] = [m.get_year(), m.get_month_with_leap(), m.get_day_count(), m.get_index_in_year(), m.get_first_julian_day().get_day()]
-        return m
+        return cls(year, month)
+
+    def _get_new_moon(self):
+        from tyme4py.solar import SolarTerm
+        # 冬至
+        dong_zhi_jd: float = SolarTerm(self._year, 0).get_cursory_julian_day()
+        # 冬至前的初一，今年首朔的日月黄经差
+        w: int = ShouXingUtil.calc_shuo(dong_zhi_jd)
+        if w > dong_zhi_jd:
+            w -= 29.53
+
+        # 正常情况正月初一为第3个朔日，但有些特殊的
+        offset: int = 2
+        if 8 < self._year < 24:
+            offset = 1
+        elif LunarYear(self._year - 1).get_leap_month() > 10 and self._year != 239 and self._year != 240:
+            offset = 3
+        # 本月初一
+        return w + 29.5306 * (offset + self.get_index_in_year())
 
     def get_lunar_year(self) -> LunarYear:
         """
         农历年
         :return: 农历年
         """
-        return self._year
-
-    def get_year(self) -> int:
-        """
-        农历年
-        :return: 农历年
-        """
-        return self._year.get_year()
-
-    def get_month(self) -> int:
-        """
-        月份
-        :return: 返回为月份数字，范围为1到12，如闰七月也返回7。
-        """
-        return self._month
+        return LunarYear.from_year(self._year)
 
     def get_month_with_leap(self) -> int:
         """
@@ -330,14 +271,23 @@ class LunarMonth(AbstractTyme):
         当月的总天数
         :return:返回为数字，从初一开始的总天数，大月有30天，小月有29天。
         """
-        return self._day_count
+        w: float = self._get_new_moon()
+        return ~~(ShouXingUtil.calc_shuo(w + 29.5306) - ShouXingUtil.calc_shuo(w))
 
     def get_index_in_year(self) -> int:
         """
         位于当年的月索引
         :return: 返回为数字，范围0到12，正月为0，依次类推，例如五月索引值为4，闰五月索引值为5。
         """
-        return self._index_in_year
+        # 位于当年的索引
+        index: int = self._month - 1
+        if self.is_leap():
+            index += 1
+        else:
+            leap_month: int = LunarYear.from_year(self._year).get_leap_month()
+            if 0 < leap_month < self._month:
+                index += 1
+        return index
 
     def get_season(self) -> LunarSeason:
         """
@@ -350,7 +300,8 @@ class LunarMonth(AbstractTyme):
         初一的儒略日
         :return: 儒略日
         """
-        return self._first_julian_day
+        from tyme4py.jd import JulianDay
+        return JulianDay.from_julian_day(JulianDay.J2000 + ShouXingUtil.calc_shuo(self._get_new_moon()))
 
     def is_leap(self) -> bool:
         """
@@ -365,7 +316,7 @@ class LunarMonth(AbstractTyme):
         :param start: 参数为起始星期，1234560分别代表星期一至星期天
         :return: 返回为数字。
         """
-        return ceil((self.index_of(self._first_julian_day.get_week().get_index() - start, 7) + self.get_day_count()) / 7)
+        return ceil((self.index_of(self.get_first_julian_day().get_week().get_index() - start, 7) + self.get_day_count()) / 7)
 
     def get_name(self) -> str:
         """
@@ -375,14 +326,14 @@ class LunarMonth(AbstractTyme):
         return ('闰' if self._leap else '') + self.NAMES[self._month - 1]
 
     def __str__(self) -> str:
-        return self._year.__str__() + self.get_name()
+        return f'{self.get_lunar_year()}{self.get_name()}'
 
     def next(self, n: int) -> LunarMonth:
         if n == 0:
-            return LunarMonth.from_ym(self.get_year(), self.get_month_with_leap())
+            return LunarMonth.from_ym(self._year, self.get_month_with_leap())
 
-        m: int = self._index_in_year + 1 + n
-        y: LunarYear = self._year
+        m: int = self.get_index_in_year() + 1 + n
+        y: LunarYear = self.get_lunar_year()
         if n > 0:
             month_count: int = y.get_month_count()
             while m > month_count:
@@ -403,29 +354,33 @@ class LunarMonth(AbstractTyme):
                 m -= 1
         return LunarMonth.from_ym(y.get_year(), -m if leap else m)
 
-    def get_days(self) -> list[LunarDay]:
+    def get_days(self) -> List[LunarDay]:
         """
         本月的农历日列表
         :return: 农历日 LunarDay 的列表，从初一开始。
         """
-        y: int = self.get_year()
         m: int = self.get_month_with_leap()
-        l: [LunarDay] = []
+        l: List[LunarDay] = []
         for i in range(1, self.get_day_count() + 1):
-            l.append(LunarDay(y, m, i))
+            l.append(LunarDay(self._year, m, i))
         return l
 
-    def get_weeks(self, start: int) -> list[LunarWeek]:
+    def get_first_day(self) -> LunarDay:
+        """
+        初一
+        """
+        return LunarDay.from_ymd(self._year, self.get_month_with_leap(), 1)
+
+    def get_weeks(self, start: int) -> List[LunarWeek]:
         """
         本月的农历周列表
         :param start: 参数为起始星期，1234560分别代表星期一至星期天
         :return: 农历周 LunarWeek 的列表。
         """
-        y: int = self.get_year()
         m: int = self.get_month_with_leap()
-        l: [LunarWeek] = []
+        l: List[LunarWeek] = []
         for i in range(0, self.get_week_count(start)):
-            l.append(LunarWeek(y, m, i, start))
+            l.append(LunarWeek(self._year, m, i, start))
         return l
 
     def get_sixty_cycle(self) -> SixtyCycle:
@@ -434,7 +389,7 @@ class LunarMonth(AbstractTyme):
         :return: 干支 SixtyCycle。
         """
         from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
-        return SixtyCycle(HeavenStem(self._year.get_sixty_cycle().get_heaven_stem().get_index() * 2 + self._month + 1).get_name() + EarthBranch(self._month + 1).get_name())
+        return SixtyCycle(HeavenStem(self.get_lunar_year().get_sixty_cycle().get_heaven_stem().get_index() * 2 + self._month + 1).get_name() + EarthBranch(self._month + 1).get_name())
 
     def get_nine_star(self) -> NineStar:
         """
@@ -443,7 +398,7 @@ class LunarMonth(AbstractTyme):
         index = self.get_sixty_cycle().get_earth_branch().get_index()
         if index < 2:
             index += 3
-        return NineStar(27 - self._year.get_sixty_cycle().get_earth_branch().get_index() % 3 * 3 - index)
+        return NineStar(27 - self.get_lunar_year().get_sixty_cycle().get_earth_branch().get_index() % 3 * 3 - index)
 
     def get_jupiter_direction(self) -> Direction:
         """
@@ -455,7 +410,7 @@ class LunarMonth(AbstractTyme):
         n: int = [7, -1, 1, 3][sixty_cycle.get_earth_branch().next(-2).get_index() % 4]
         return Direction(n) if n != -1 else sixty_cycle.get_heaven_stem().get_direction()
 
-    def get_fetus(self) -> FetusMonth | None:
+    def get_fetus(self) -> Union[FetusMonth, None]:
         """
         :return: 返回为逐月胎神 FetusMonth。闰月无胎神。
         """
@@ -468,19 +423,20 @@ class LunarMonth(AbstractTyme):
         return MinorRen((self._month - 1) % 6)
 
 
-class LunarWeek(AbstractTyme):
+class LunarWeek(WeekUnit):
     """
     农历周
     农历一个月最多有6个周，分别为：第一周、第二周、第三周、第四周、第五周、第六周。
     """
-    NAMES: [str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
+    NAMES: List[str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
     """名称"""
-    _month: LunarMonth
-    """月"""
-    _index: int
-    """索引，0-5"""
-    _start: Week
-    """起始星期"""
+
+    @staticmethod
+    def validate(year: int, month: int, index: int, start: int) -> None:
+        WeekUnit.validate(year, month, index, start)
+        m: LunarMonth = LunarMonth.from_ym(year, month)
+        if index >= m.get_week_count(start):
+            raise ValueError(f'illegal lunar week index: {index} in month: {m}')
 
     def __init__(self, year: int, month: int, index: int, start: int):
         """
@@ -489,17 +445,8 @@ class LunarWeek(AbstractTyme):
         :param index: 周索引，0-5
         :param start: 起始星期  (1234560分别代表星期一至星期日)
         """
-        if index < 0 or index > 5:
-            raise ValueError(f'illegal lunar week index: {index}')
-        if start < 0 or start > 6:
-            raise ValueError(f'illegal lunar week start: {start}')
-        m: LunarMonth = LunarMonth.from_ym(year, month)
-        if index >= m.get_week_count(start):
-            raise ValueError(f'illegal lunar week index: {index} in month: {m}')
-
-        self._month = m
-        self._index = index
-        self._start = Week(start)
+        LunarWeek.validate(year, month, index, start)
+        super().__init__(year, month, index, start)
 
     @classmethod
     def from_ym(cls, year: int, month: int, index: int, start: int) -> LunarWeek:
@@ -509,76 +456,50 @@ class LunarWeek(AbstractTyme):
         """
         :return:农历月
         """
-        return self._month
-
-    def get_year(self) -> int:
-        """
-        :return: 农历年数字
-        """
-        return self._month.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 农历月数字
-        """
-        return self._month.get_month_with_leap()
-
-    def get_index(self) -> int:
-        """
-        :return:  索引，0-5
-        """
-        return self._index
-
-    def get_start(self) -> Week:
-        """
-        起始星期
-        :return:  星期
-        """
-        return self._start
+        return LunarMonth.from_ym(self._year, self._month)
 
     def get_name(self) -> str:
         return self.NAMES[self._index]
 
     def __str__(self) -> str:
-        return f'{self._month.__str__()}{self.get_name()}'
+        return f'{self.get_lunar_month()}{self.get_name()}'
 
     def next(self, n: int) -> LunarWeek:
-        start_index: int = self._start.get_index()
         if n == 0:
-            return LunarWeek(self.get_year(), self.get_month(), self._index, start_index)
+            return LunarWeek(self._year, self._month, self._index, self._start)
 
         d: int = self._index + n
-        m: LunarMonth = self._month
+        m: LunarMonth = self.get_lunar_month()
         if n > 0:
-            week_count: int = m.get_week_count(start_index)
+            week_count: int = m.get_week_count(self._start)
             while d >= week_count:
                 d -= week_count
                 m = m.next(1)
-                if not LunarDay(m.get_year(), m.get_month_with_leap(), 1).get_week() == self._start:
+                if m.get_first_day().get_week().get_index() != self._start:
                     d += 1
-                week_count = m.get_week_count(start_index)
+                week_count = m.get_week_count(self._start)
         else:
             while d < 0:
-                if not LunarDay(m.get_year(), m.get_month_with_leap(), 1).get_week() == self._start:
+                if m.get_first_day().get_week().get_index() != self._start:
                     d -= 1
                 m = m.next(-1)
-                d += m.get_week_count(start_index)
-        return LunarWeek(m.get_year(), m.get_month_with_leap(), d, start_index)
+                d += m.get_week_count(self._start)
+        return LunarWeek(m.get_year(), m.get_month_with_leap(), d, self._start)
 
     def get_first_day(self) -> LunarDay:
         """
         本周第一天的农历日
         :return: 农历日 LunarDay。
         """
-        first_day: LunarDay = LunarDay(self.get_year(), self.get_month(), 1)
-        return first_day.next(self._index * 7 - self.index_of(first_day.get_week().get_index() - self._start.get_index(), 7))
+        first_day: LunarDay = LunarDay(self._year, self._month, 1)
+        return first_day.next(self._index * 7 - self.index_of(first_day.get_week().get_index() - self._start, 7))
 
-    def get_days(self) -> list[LunarDay]:
+    def get_days(self) -> List[LunarDay]:
         """
         本周农历日列表
         :return: 农历日 LunarDay的列表。
         """
-        l: [LunarDay] = []
+        l: List[LunarDay] = []
         d: LunarDay = self.get_first_day()
         l.append(d)
         for i in range(1, 7):
@@ -589,18 +510,18 @@ class LunarWeek(AbstractTyme):
         return other and other.get_first_day() == self.get_first_day()
 
 
-class LunarDay(AbstractTyme):
+class LunarDay(DayUnit):
     """农历日"""
-    NAMES: [str] = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']
+    NAMES: List[str] = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']
     """名称"""
-    _month: LunarMonth
-    """农历月"""
-    _day: int
-    """日"""
-    _solar_day: SolarDay = None
-    """公历日（第一次使用时才会初始化）"""
-    _sixty_cycle_day: SixtyCycleDay = None
-    """干支日（第一次使用时才会初始化）"""
+
+    @staticmethod
+    def validate(year: int, month: int, day: int) -> None:
+        if day < 1:
+            raise ValueError(f'illegal lunar day {day}')
+        m: LunarMonth = LunarMonth.from_ym(year, month)
+        if day > m.get_day_count():
+            raise ValueError(f'illegal day {day} in {m}')
 
     def __init__(self, year: int, month: int, day: int):
         """
@@ -608,11 +529,8 @@ class LunarDay(AbstractTyme):
         :param month: 农历月，闰月为负
         :param day: 农历日
         """
-        m: LunarMonth = LunarMonth.from_ym(year, month)
-        if day < 1 or day > m.get_day_count():
-            raise ValueError(f'illegal day {day} in {m}')
-        self._month = m
-        self._day = day
+        LunarDay.validate(year, month, day)
+        super().__init__(year, month, day)
 
     @classmethod
     def from_ymd(cls, year: int, month: int, day: int) -> LunarDay:
@@ -622,26 +540,7 @@ class LunarDay(AbstractTyme):
         """
         :return: 农历月
         """
-        return self._month
-
-    def get_year(self) -> int:
-        """
-        :return: 农历年 number
-        """
-        return self._month.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 农历月 number
-        """
-        return self._month.get_month_with_leap()
-
-    def get_day(self) -> int:
-        """
-        日
-        :return: 数字，范围1到30。
-        """
-        return self._day
+        return LunarMonth.from_ym(self._year, self._month)
 
     def get_name(self) -> str:
         """
@@ -650,7 +549,7 @@ class LunarDay(AbstractTyme):
         return self.NAMES[self._day - 1]
 
     def __str__(self) -> str:
-        return f'{self._month.__str__()}{self.get_name()}'
+        return f'{self.get_lunar_month()}{self.get_name()}'
 
     def next(self, n: int) -> LunarDay:
         return self.get_solar_day().next(n).get_lunar_day()
@@ -661,14 +560,12 @@ class LunarDay(AbstractTyme):
         :param target:农历日 LunarDay
         :return: true/false
         """
-        a_year: int = self.get_year()
-        b_year: int = target.get_year()
-        if a_year != b_year:
-            return a_year < b_year
-        a_month: int = self.get_month()
-        b_month: int = target.get_month()
-        if a_month != b_month:
-            return abs(a_month) < abs(b_month)
+        y: int = target.get_year()
+        if self._year != y:
+            return self._year < y
+        m: int = target.get_month()
+        if self._month != m:
+            return abs(self._month) < abs(m)
         return self._day < target.get_day()
 
     def is_after(self, target: LunarDay) -> bool:
@@ -677,14 +574,12 @@ class LunarDay(AbstractTyme):
         :param target:农历日 LunarDay
         :return:
         """
-        a_year: int = self.get_year()
-        b_year: int = target.get_year()
-        if a_year != b_year:
-            return a_year > b_year
-        a_month: int = self.get_month()
-        b_month: int = target.get_month()
-        if a_month != b_month:
-            return abs(a_month) >= abs(b_month)
+        y: int = target.get_year()
+        if self._year != y:
+            return self._year > y
+        m: int = target.get_month()
+        if self._month != m:
+            return abs(self._month) >= abs(m)
         return self._day > target.get_day()
 
     def get_week(self) -> Week:
@@ -715,7 +610,7 @@ class LunarDay(AbstractTyme):
         :return: 干支
         """
         from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
-        offset: int = int(self._month.get_first_julian_day().next(self._day - 12).get_day())
+        offset: int = int(self.get_lunar_month().get_first_julian_day().next(self._day - 12).get_day())
         return SixtyCycle(HeavenStem(offset).get_name() + EarthBranch(offset).get_name())
 
     def get_duty(self) -> Duty:
@@ -766,7 +661,7 @@ class LunarDay(AbstractTyme):
         """
         index: int = self.get_sixty_cycle().get_index()
         from tyme4py.culture import Element
-        return Element(index // 12).get_direction() if index % 12 < 6 else self._month.get_lunar_year().get_jupiter_direction()
+        return Element(index // 12).get_direction() if index % 12 < 6 else self.get_lunar_month().get_lunar_year().get_jupiter_direction()
 
     def get_fetus_day(self) -> FetusDay:
         """
@@ -780,7 +675,7 @@ class LunarDay(AbstractTyme):
         :return: 月相第几天
         """
         today = self.get_solar_day()
-        m = self._month.next(1)
+        m = self.get_lunar_month().next(1)
         p = Phase.from_index(m.get_year(), m.get_month_with_leap(), 0)
         d = p.get_solar_day()
         while d.is_after(today):
@@ -800,18 +695,14 @@ class LunarDay(AbstractTyme):
         公历日
         :return: 公历日 SolarDay。
         """
-        if self._solar_day is None:
-            self._solar_day = self._month.get_first_julian_day().next(self._day - 1).get_solar_day()
-        return self._solar_day
+        return self.get_lunar_month().get_first_julian_day().next(self._day - 1).get_solar_day()
 
     def get_sixty_cycle_day(self) -> SixtyCycleDay:
         """
         干支日
         :return: 干支日
         """
-        if self._sixty_cycle_day is None:
-            self._sixty_cycle_day = self.get_solar_day().get_sixty_cycle_day()
-        return self._sixty_cycle_day
+        return self.get_solar_day().get_sixty_cycle_day()
 
     def get_twenty_eight_star(self) -> TwentyEightStar:
         """
@@ -819,51 +710,48 @@ class LunarDay(AbstractTyme):
         """
         return TwentyEightStar([10, 18, 26, 6, 14, 22, 2][self.get_solar_day().get_week().get_index()]).next(-7 * self.get_sixty_cycle().get_earth_branch().get_index())
 
-    def get_festival(self) -> LunarFestival | None:
+    def get_festival(self) -> Union[LunarFestival, None]:
         """
         农历传统节日，如果当天不是农历传统节日，返回None
         :return:农历传统节日 LunarFestival
         """
-        return LunarFestival.from_ymd(self.get_year(), self.get_month(), self._day)
+        return LunarFestival.from_ymd(self._year, self._month, self._day)
 
     def get_six_star(self) -> SixStar:
         """
         :return: 六曜
         """
-        return SixStar((self._month.get_month() + self._day - 2) % 6)
+        return SixStar((abs(self._month) + self._day - 2) % 6)
 
-    def get_gods(self) -> list[God]:
+    def get_gods(self) -> List[God]:
         """
         神煞列表(吉神宜趋，凶神宜忌)
         :return: 神煞列表
         """
         return self.get_sixty_cycle_day().get_gods()
 
-    def get_recommends(self) -> list[Taboo]:
+    def get_recommends(self) -> List[Taboo]:
         """
         今日 宜
         :return: 宜忌列表
         """
         return self.get_sixty_cycle_day().get_recommends()
 
-    def get_avoids(self) -> list[Taboo]:
+    def get_avoids(self) -> List[Taboo]:
         """
         今日 忌
         :return: 宜忌列表
         """
         return self.get_sixty_cycle_day().get_avoids()
 
-    def get_hours(self) -> list[LunarHour]:
+    def get_hours(self) -> List[LunarHour]:
         """
         当天的时辰列表
         :return: 由于23:00-23:59、00:00-00:59均为子时，而农历日是从00:00-23:59为一天，所以获取当天的时辰列表，实际会返回13个。
         """
-        l: [LunarHour] = []
-        y: int = self.get_year()
-        m: int = self.get_month()
-        l.append(LunarHour(y, m, self._day, 0, 0, 0))
+        l: List[LunarHour] = [LunarHour(self._year, self._month, self._day, 0, 0, 0)]
         for i in range(0, 24, 2):
-            l.append(LunarHour(y, m, self._day, i + 1, 0, 0))
+            l.append(LunarHour(self._year, self._month, self._day, i + 1, 0, 0))
         return l
 
     def get_minor_ren(self) -> MinorRen:
@@ -881,24 +769,17 @@ class LunarDay(AbstractTyme):
         return self.get_sixty_cycle_day().get_three_pillars()
 
 
-class LunarHour(AbstractTyme):
+class LunarHour(SecondUnit):
     """
     农历时辰
     """
     provider: EightCharProvider = DefaultEightCharProvider()
     """八字计算接口"""
-    _day: LunarDay
-    """农历日"""
-    _hour: int
-    """时"""
-    _minute: int
-    """分"""
-    _second: int
-    """秒"""
-    _solar_time: SolarTime = None
-    """公历时刻（第一次使用时才会初始化）"""
-    _sixty_cycle_hour: SixtyCycleHour = None
-    """干支时辰（第一次使用时才会初始化）"""
+
+    @staticmethod
+    def validate(year: int, month: int, day: int, hour: int, minute: int, second: int) -> None:
+        SecondUnit.validate(year, month, day, hour, minute, second)
+        LunarDay.validate(year, month, day)
 
     def __init__(self, year: int, month: int, day: int, hour: int, minute: int = 0, second: int = 0):
         """
@@ -909,17 +790,8 @@ class LunarHour(AbstractTyme):
         :param minute: 分为0-59
         :param second: 秒为0-59
         """
-        if hour < 0 or hour > 23:
-            raise ValueError(f'illegal hour: {hour}')
-        if minute < 0 or minute > 59:
-            raise ValueError(f'illegal minute): {minute}')
-        if second < 0 or second > 59:
-            raise ValueError(f'illegal second: {second}')
-
-        self._day = LunarDay(year, month, day)
-        self._hour = hour
-        self._minute = minute
-        self._second = second
+        LunarHour.validate(year, month, day, hour, minute, second)
+        super().__init__(year, month, day, hour, minute, second)
 
     @classmethod
     def from_ymd_hms(cls, year: int, month: int, day: int, hour: int, minute: int = 0, second: int = 0) -> LunarHour:
@@ -929,53 +801,14 @@ class LunarHour(AbstractTyme):
         """
         :return: 农历日
         """
-        return self._day
-
-    def get_year(self) -> int:
-        """
-        :return: 农历年 number
-        """
-        return self._day.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 农历月 number
-        """
-        return self._day.get_month()
-
-    def get_day(self) -> int:
-        """
-        :return: 农历日 number
-        """
-        return self._day.get_day()
-
-    def get_hour(self) -> int:
-        """
-        时
-        :return: 返回为数字，范围0到23。
-        """
-        return self._hour
-
-    def get_minute(self) -> int:
-        """
-        分
-        :return: 返回为数字，范围0到59。
-        """
-        return self._minute
-
-    def get_second(self) -> int:
-        """
-        秒
-        :return: 返回为数字，范围0到59。
-        """
-        return self._second
+        return LunarDay.from_ymd(self._year, self._month, self._day)
 
     def get_name(self) -> str:
         from tyme4py.sixtycycle import EarthBranch
         return f'{EarthBranch(self.get_index_in_day()).get_name()}时'
 
     def __str__(self) -> str:
-        return f'{self._day}{self.get_sixty_cycle().get_name()}时'
+        return f'{self.get_lunar_day()}{self.get_sixty_cycle().get_name()}时'
 
     def get_index_in_day(self) -> int:
         """
@@ -986,7 +819,7 @@ class LunarHour(AbstractTyme):
 
     def next(self, n: int) -> LunarHour:
         if n == 0:
-            return LunarHour(self.get_year(), self.get_month(), self.get_day(), self._hour, self._minute, self._second)
+            return LunarHour(self._year, self._month, self._day, self._hour, self._minute, self._second)
         h: int = self._hour + n * 2
         diff: int = -1 if h < 0 else 1
         hour: int = abs(h)
@@ -995,7 +828,7 @@ class LunarHour(AbstractTyme):
         if hour < 0:
             hour += 24
             days -= 1
-        d: LunarDay = self._day.next(days)
+        d: LunarDay = self.get_lunar_day().next(days)
         return LunarHour(d.get_year(), d.get_month(), d.get_day(), hour, self._minute, self._second)
 
     def is_before(self, target: LunarHour) -> bool:
@@ -1004,11 +837,15 @@ class LunarHour(AbstractTyme):
         :param target: 农历时辰
         :return: true/false
         """
-        if not self._day == target.get_lunar_day():
-            return self._day.is_before(target.get_lunar_day())
-        if self._hour != target.get_hour():
-            return self._hour < target.get_hour()
-        return self._minute < target.get_minute() if self._minute != target.get_minute() else self._second < target.get_second()
+        a_day: LunarDay = self.get_lunar_day()
+        b_day: LunarDay = target.get_lunar_day()
+        if a_day != b_day:
+            return a_day.is_before(b_day)
+        h = target.get_hour()
+        if self._hour != h:
+            return self._hour < h
+        m = target.get_minute()
+        return self._minute < m if self._minute != m else self._second < target.get_second()
 
     def is_after(self, target: LunarHour) -> bool:
         """
@@ -1016,11 +853,15 @@ class LunarHour(AbstractTyme):
         :param target: 农历时辰
         :return: true/false
         """
-        if not self._day == target.get_lunar_day():
-            return self._day.is_after(target.get_lunar_day())
-        if self._hour != target.get_hour():
-            return self._hour > target.get_hour()
-        return self._minute > target.get_minute() if self._minute != target.get_minute() else self._second > target.get_second()
+        a_day: LunarDay = self.get_lunar_day()
+        b_day: LunarDay = target.get_lunar_day()
+        if a_day != b_day:
+            return a_day.is_after(b_day)
+        h = target.get_hour()
+        if self._hour != h:
+            return self._hour > h
+        m = target.get_minute()
+        return self._minute > m if self._minute != m else self._second > target.get_second()
 
     def get_year_sixty_cycle(self) -> SixtyCycle:
         """
@@ -1053,7 +894,7 @@ class LunarHour(AbstractTyme):
         """
         from tyme4py.sixtycycle import SixtyCycle, HeavenStem, EarthBranch
         earth_branch_index: int = self.get_index_in_day() % 12
-        d: SixtyCycle = self._day.get_sixty_cycle()
+        d: SixtyCycle = self.get_lunar_day().get_sixty_cycle()
         if self._hour >= 23:
             d = d.next(1)
         return SixtyCycle(HeavenStem(d.get_heaven_stem().get_index() % 5 * 2 + earth_branch_index).get_name() + EarthBranch(earth_branch_index).get_name())
@@ -1070,10 +911,11 @@ class LunarHour(AbstractTyme):
         :return: 九星 NineStar。
         """
         from tyme4py.solar import SolarTerm
-        solar: SolarDay = self._day.get_solar_day()
+        d: LunarDay = self.get_lunar_day()
+        solar: SolarDay = d.get_solar_day()
         dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
         earth_branch_index: int = self.get_index_in_day() % 12
-        index: int = [8, 5, 2][self._day.get_sixty_cycle().get_earth_branch().get_index() % 3]
+        index: int = [8, 5, 2][d.get_sixty_cycle().get_earth_branch().get_index() % 3]
         if (not solar.is_before(dong_zhi.get_julian_day().get_solar_day())) and solar.is_before(dong_zhi.next(12).get_julian_day().get_solar_day()):
             index = 8 + earth_branch_index - index
         else:
@@ -1086,19 +928,15 @@ class LunarHour(AbstractTyme):
         :return: 公历时刻 SolarTime
         """
         from tyme4py.solar import SolarTime
-        if self._solar_time is None:
-            d: SolarDay = self._day.get_solar_day()
-            self._solar_time = SolarTime(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
-        return self._solar_time
+        d: SolarDay = self.get_lunar_day().get_solar_day()
+        return SolarTime(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
 
     def get_sixty_cycle_hour(self) -> SixtyCycleHour:
         """
         干支时辰
         :return: 干支时辰 SixtyCycleHour
         """
-        if self._sixty_cycle_hour is None:
-            self._sixty_cycle_hour = self.get_solar_time().get_sixty_cycle_hour()
-        return self._sixty_cycle_hour
+        return self.get_solar_time().get_sixty_cycle_hour()
 
     def get_eight_char(self) -> EightChar:
         """
@@ -1107,14 +945,14 @@ class LunarHour(AbstractTyme):
         """
         return LunarHour.provider.get_eight_char(self)
 
-    def get_recommends(self) -> list[Taboo]:
+    def get_recommends(self) -> List[Taboo]:
         """
         宜
         :return: 宜忌列表
         """
         return Taboo.get_hour_recommends(self.get_sixty_cycle_hour().get_day(), self.get_sixty_cycle())
 
-    def get_avoids(self) -> list[Taboo]:
+    def get_avoids(self) -> List[Taboo]:
         """
         忌
         :return: 宜忌列表

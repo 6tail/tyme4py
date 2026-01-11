@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, List
 
 from tyme4py import LoopTyme, AbstractCulture
 from tyme4py.culture import Direction
@@ -14,10 +14,10 @@ if TYPE_CHECKING:
 
 class FetusEarthBranch(LoopTyme):
     """地支六甲胎神"""
-    NAMES: [str] = ['碓', '厕', '炉', '门', '栖', '床']
+    NAMES: List[str] = ['碓', '厕', '炉', '门', '栖', '床']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -34,10 +34,10 @@ class FetusEarthBranch(LoopTyme):
 
 class FetusHeavenStem(LoopTyme):
     """天干六甲胎神"""
-    NAMES: [str] = ['门', '碓磨', '厨灶', '仓库', '房床']
+    NAMES: List[str] = ['门', '碓磨', '厨灶', '仓库', '房床']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -54,10 +54,10 @@ class FetusHeavenStem(LoopTyme):
 
 class FetusMonth(LoopTyme):
     """逐月胎神"""
-    NAMES: [str] = ['占房床', '占户窗', '占门堂', '占厨灶', '占房床', '占床仓', '占碓磨', '占厕户', '占门房', '占房床', '占灶炉', '占房床']
+    NAMES: List[str] = ['占房床', '占户窗', '占门堂', '占厨灶', '占房床', '占床仓', '占碓磨', '占厕户', '占门房', '占房床', '占灶炉', '占房床']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -69,7 +69,7 @@ class FetusMonth(LoopTyme):
         return cls(index)
 
     @classmethod
-    def from_lunar_month(cls, lunar_month: LunarMonth) -> FetusMonth | None:
+    def from_lunar_month(cls, lunar_month: LunarMonth) -> Union[FetusMonth, None]:
         """
         从农历月初始化
         :param lunar_month: 农历月

@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 from math import floor, ceil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, List
 
-from tyme4py import LoopTyme, AbstractCultureDay, AbstractTyme
+from tyme4py import LoopTyme, AbstractCultureDay
 from tyme4py.culture import Week, Constellation, PhaseDay, Phase
 from tyme4py.culture.dog import DogDay, Dog
 from tyme4py.culture.nine import NineDay, Nine
 from tyme4py.culture.phenology import PhenologyDay, Phenology
 from tyme4py.culture.plumrain import PlumRainDay, PlumRain
 from tyme4py.enums import HideHeavenStemType
+from tyme4py.unit import YearUnit, MonthUnit, WeekUnit, DayUnit, SecondUnit
 from tyme4py.util import ShouXingUtil
 from tyme4py.jd import JulianDay
 from tyme4py.festival import SolarFestival
@@ -31,7 +32,7 @@ class SolarTerm(LoopTyme):
     _cursory_julian_day: float
     """儒略日（用于日历，只精确到日中午12:00）"""
 
-    def __init__(self, year: int, index_or_name: int | str):
+    def __init__(self, year: int, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
         y = year
         if isinstance(index_or_name, int):
@@ -104,22 +105,21 @@ class SolarTermDay(AbstractCultureDay):
         return self.get_culture()
 
 
-class SolarYear(AbstractTyme):
+class SolarYear(YearUnit):
     """公历年"""
 
-    _year: int
-
     def __init__(self, year: int):
+        SolarYear.validate(year)
+        super().__init__(year)
+
+    @staticmethod
+    def validate(year: int) -> None:
         if year < 1 or year > 9999:
             raise ValueError(f'illegal solar year: {year}')
-        self._year = year
 
     @classmethod
     def from_year(cls, year: int) -> SolarYear:
         return cls(year)
-
-    def get_year(self) -> int:
-        return self._year
 
     def get_day_count(self) -> int:
         if self._year == 1582:
@@ -137,13 +137,13 @@ class SolarYear(AbstractTyme):
     def next(self, n: int) -> SolarYear:
         return SolarYear.from_year(self._year + n)
 
-    def get_months(self) -> list[SolarMonth]:
+    def get_months(self) -> List[SolarMonth]:
         return [SolarMonth.from_ym(self._year, month) for month in range(1, 13)]
 
-    def get_seasons(self) -> list[SolarSeason]:
+    def get_seasons(self) -> List[SolarSeason]:
         return [SolarSeason.from_index(self._year, i) for i in range(4)]
 
-    def get_half_years(self) -> list[SolarHalfYear]:
+    def get_half_years(self) -> List[SolarHalfYear]:
         return [SolarHalfYear.from_index(self._year, i) for i in range(2)]
 
     def get_rab_byung_year(self) -> RabByungYear:
@@ -151,18 +151,21 @@ class SolarYear(AbstractTyme):
         return RabByungYear.from_year(self._year)
 
 
-class SolarHalfYear(AbstractTyme):
+class SolarHalfYear(YearUnit):
     """公历半年"""
-    NAMES = ['上半年', '下半年']
-    _year: SolarYear
-    """公历年"""
+    NAMES: List[str] = ['上半年', '下半年']
     _index: int
     """索引"""
 
-    def __init__(self, year: int, index: int):
+    @staticmethod
+    def validate(year: int, index: int) -> None:
         if index < 0 or index > 1:
             raise ValueError(f'illegal solar half year index: {index}')
-        self._year = SolarYear.from_year(year)
+        SolarYear.validate(year)
+
+    def __init__(self, year: int, index: int):
+        SolarHalfYear.validate(year, index)
+        super().__init__(year)
         self._index = index
 
     @classmethod
@@ -170,10 +173,7 @@ class SolarHalfYear(AbstractTyme):
         return cls(year, index)
 
     def get_solar_year(self) -> SolarYear:
-        return self._year
-
-    def get_year(self) -> int:
-        return self._year.get_year()
+        return SolarYear.from_year(self._year)
 
     def get_index(self) -> int:
         return self._index
@@ -182,31 +182,34 @@ class SolarHalfYear(AbstractTyme):
         return self.NAMES[self._index]
 
     def __str__(self) -> str:
-        return f'{self._year}{self.get_name()}'
+        return f'{self.get_solar_year()}{self.get_name()}'
 
     def next(self, n: int) -> SolarHalfYear:
-        i = self.get_index() + n
+        i = self._index + n
         return SolarHalfYear.from_index((self.get_year() * 2 + i) // 2, self.index_of(i, 2))
 
-    def get_months(self) -> list[SolarMonth]:
+    def get_months(self) -> List[SolarMonth]:
         y = self.get_year()
         return [SolarMonth.from_ym(y, self._index * 6 + i) for i in range(1, 7)]
 
-    def get_seasons(self) -> list[SolarSeason]:
+    def get_seasons(self) -> List[SolarSeason]:
         y = self.get_year()
         return [SolarSeason.from_index(y, self._index * 2 + i) for i in range(2)]
 
 
-class SolarSeason(AbstractTyme):
+class SolarSeason(YearUnit):
     """公历季度"""
     NAMES = ['一季度', '二季度', '三季度', '四季度']
-    _year: SolarYear
-    _index: int
 
-    def __init__(self, year: int, index: int):
+    @staticmethod
+    def validate(year: int, index: int) -> None:
         if index < 0 or index > 3:
             raise ValueError(f'illegal solar season index: {index}')
-        self._year = SolarYear.from_year(year)
+        SolarYear.validate(year)
+
+    def __init__(self, year: int, index: int):
+        SolarSeason.validate(year, index)
+        super().__init__(year)
         self._index = index
 
     @classmethod
@@ -214,10 +217,7 @@ class SolarSeason(AbstractTyme):
         return cls(year, index)
 
     def get_solar_year(self) -> SolarYear:
-        return self._year
-
-    def get_year(self) -> int:
-        return self._year.get_year()
+        return SolarYear.from_year(self._year)
 
     def get_index(self) -> int:
         return self._index
@@ -226,36 +226,36 @@ class SolarSeason(AbstractTyme):
         return self.NAMES[self._index]
 
     def __str__(self) -> str:
-        return f'{self._year}{self.get_name()}'
+        return f'{self.get_solar_year()}{self.get_name()}'
 
     def next(self, n: int) -> SolarSeason:
-        i = self.get_index() + n
+        i = self._index + n
         return SolarSeason.from_index((self.get_year() * 4 + i) // 4, self.index_of(i, 4))
 
-    def get_months(self) -> list[SolarMonth]:
+    def get_months(self) -> List[SolarMonth]:
         y = self.get_year()
         return [SolarMonth.from_ym(y, self._index * 3 + i) for i in range(1, 4)]
 
 
-class SolarMonth(AbstractTyme):
+class SolarMonth(MonthUnit):
     """公历月"""
-    NAMES: [str] = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-    _DAYS: [int] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    NAMES: List[str] = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+    _DAYS: List[int] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     """每月天数"""
-    _year: SolarYear
-    """公历年"""
-    _month: int
-    """月"""
+
+    @staticmethod
+    def validate(year: int, month: int) -> None:
+        if month < 1 or month > 12:
+            raise ValueError(f'illegal solar month: {month}')
+        SolarYear.validate(year)
 
     def __init__(self, year: int, month: int):
         """
         :param year:  年
         :param month: 月
         """
-        if month < 1 or month > 12:
-            raise ValueError(f'illegal solar month: {month}')
-        self._year = SolarYear(year)
-        self._month = month
+        SolarMonth.validate(year, month)
+        super().__init__(year, month)
 
     @classmethod
     def from_ym(cls, year: int, month: int) -> SolarMonth:
@@ -265,30 +265,18 @@ class SolarMonth(AbstractTyme):
         """
         :return: 公历年
         """
-        return self._year
-
-    def get_year(self) -> int:
-        """
-        :return: 公历年数字，范围为1到9999。
-        """
-        return self._year.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 月份数字，范围为1到12
-        """
-        return self._month
+        return SolarYear.from_year(self._year)
 
     def get_day_count(self) -> int:
         """
         当月的总天数
         :return:  天数（1582年10月只有21天)
         """
-        if 1582 == self.get_year() and 10 == self._month:
+        if 1582 == self._year and 10 == self._month:
             return 21
         d: int = self._DAYS[self.get_index_in_year()]
         # 公历闰年2月多一天
-        if 2 == self._month and self._year.is_leap():
+        if 2 == self._month and self.get_solar_year().is_leap():
             d += 1
         return d
 
@@ -303,7 +291,7 @@ class SolarMonth(AbstractTyme):
         """
         :return: 公历季度  SolarSeason
         """
-        return SolarSeason(self.get_year(), int(self.get_index_in_year() / 3))
+        return SolarSeason(self._year, int(self.get_index_in_year() / 3))
 
     def get_week_count(self, start: int) -> int:
         """
@@ -311,52 +299,57 @@ class SolarMonth(AbstractTyme):
         :param start:起始星期，1234560分别代表星期一至星期天
         :return:周数
         """
-        return ceil((self.index_of(SolarDay(self.get_year(), self._month, 1).get_week().get_index() - start,
-                                   7) + self.get_day_count()) / 7)
+        return ceil((self.index_of(SolarDay(self._year, self._month, 1).get_week().get_index() - start, 7) + self.get_day_count()) / 7)
 
     def get_name(self) -> str:
         return self.NAMES[self.get_index_in_year()]
 
     def __str__(self) -> str:
-        return self._year.__str__() + self.get_name()
+        return f'{self.get_solar_year()}{self.get_name()}'
 
     def next(self, n: int) -> SolarMonth:
         i = self._month - 1 + n
-        return SolarMonth.from_ym((self.get_year() * 12 + i) // 12, self.index_of(i, 12) + 1)
+        return SolarMonth.from_ym((self._year * 12 + i) // 12, self.index_of(i, 12) + 1)
 
-    def get_weeks(self, start: int) -> list[SolarWeek]:
+    def get_weeks(self, start: int) -> List[SolarWeek]:
         """
         本月的公历周列表
         :param start: 星期几作为一周的开始，1234560分别代表星期一至星期天
         :return: 周列表
         """
-        l: [SolarWeek] = []
-        y: int = self.get_year()
+        l: List[SolarWeek] = []
         for i in range(0, self.get_week_count(start)):
-            l.append(SolarWeek(y, self._month, i, start))
+            l.append(SolarWeek(self._year, self._month, i, start))
         return l
 
-    def get_days(self) -> list[SolarDay]:
+    def get_days(self) -> List[SolarDay]:
         """
         本月的公历日列表
         :return: 公历日 SolarDay 的列表，从1日开始
         """
-        l: [SolarDay] = []
-        y: int = self.get_year()
+        l: List[SolarDay] = []
         for i in range(1, self.get_day_count()):
-            l.append(SolarDay(y, self._month, i))
+            l.append(SolarDay(self._year, self._month, i))
         return l
 
+    def get_first_day(self) -> SolarDay:
+        """
+        本月第一天
+        :return: 公历日 SolarDay
+        """
+        return SolarDay.from_ymd(self._year, self._month, 1)
 
-class SolarWeek(AbstractTyme):
+
+class SolarWeek(WeekUnit):
     """公历周"""
-    NAMES: [str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
-    _month: SolarMonth
-    """公历月"""
-    _index: int
-    """索引，0-5"""
-    _start: Week
-    """起始星期"""
+    NAMES: List[str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
+
+    @staticmethod
+    def validate(year: int, month: int, index: int, start: int) -> None:
+        WeekUnit.validate(year, month, index, start)
+        m: SolarMonth = SolarMonth(year, month)
+        if index >= m.get_week_count(start):
+            raise ValueError(f'illegal solar week index: {index} in month: {m}')
 
     def __init__(self, year: int, month: int, index: int, start: int):
         """
@@ -365,17 +358,8 @@ class SolarWeek(AbstractTyme):
         :param index: 索引，0-5
         :param start: 起始星期，1234560分别代表星期一至星期天
         """
-        if index < 0 or index > 5:
-            raise ValueError(f'illegal solar week index: {index}')
-        if start < 0 or start > 6:
-            raise ValueError(f'illegal solar week start: {start}')
-        m: SolarMonth = SolarMonth(year, month)
-        if index >= m.get_week_count(start):
-            raise ValueError(f'illegal solar week index: {index} in month: {m}')
-
-        self._month = m
-        self._index = index
-        self._start = Week(start)
+        SolarWeek.validate(year, month, index, start)
+        super().__init__(year, month, index, start)
 
     @classmethod
     def from_ym(cls, year: int, month: int, index: int, start: int) -> SolarWeek:
@@ -385,25 +369,7 @@ class SolarWeek(AbstractTyme):
         """
         :return: 公历月
         """
-        return self._month
-
-    def get_year(self) -> int:
-        """
-        :return: 年
-        """
-        return self._month.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 月
-        """
-        return self._month.get_month()
-
-    def get_index(self) -> int:
-        """
-        :return: 索引，0-5
-        """
-        return self._index
+        return SolarMonth.from_ym(self._year, self._month)
 
     def get_index_in_year(self) -> int:
         """
@@ -414,61 +380,53 @@ class SolarWeek(AbstractTyme):
         # 本周第1天
         first_day: SolarDay = self.get_first_day()
         # 今年第1周
-        w: SolarWeek = SolarWeek(self.get_year(), 1, 0, self._start.get_index())
+        w: SolarWeek = SolarWeek(self._year, 1, 0, self._start)
         while not w.get_first_day() == first_day:
             w = w.next(1)
             i += 1
         return i
 
-    def get_start(self) -> Week:
-        """
-        起始星期
-        :return: 星期
-        """
-        return self._start
-
     def get_name(self) -> str:
         return self.NAMES[self._index]
 
     def __str__(self) -> str:
-        return self._month.__str__() + self.get_name()
+        return f'{self.get_solar_month()}{self.get_name()}'
 
     def next(self, n: int) -> SolarWeek:
-        start_index: int = self._start.get_index()
         d: int = self._index
-        m: SolarMonth = self._month
+        m: SolarMonth = self.get_solar_month()
         if n > 0:
             d += n
-            week_count: int = m.get_week_count(start_index)
+            week_count: int = m.get_week_count(self._start)
             while d >= week_count:
                 d -= week_count
                 m = m.next(1)
-                if not SolarDay(m.get_year(), m.get_month(), 1).get_week() == self._start:
+                if m.get_first_day().get_week().get_index() != self._start:
                     d += 1
-                week_count = m.get_week_count(start_index)
+                week_count = m.get_week_count(self._start)
         elif n < 0:
             d += n
             while d < 0:
-                if not SolarDay(m.get_year(), m.get_month(), 1).get_week() == self._start:
+                if m.get_first_day().get_week().get_index() != self._start:
                     d -= 1
                 m = m.next(-1)
-                d += m.get_week_count(start_index)
-        return SolarWeek(m.get_year(), m.get_month(), d, start_index)
+                d += m.get_week_count(self._start)
+        return SolarWeek(m.get_year(), m.get_month(), d, self._start)
 
     def get_first_day(self) -> SolarDay:
         """
         本周第1天
         :return: 公历日
         """
-        first_day: SolarDay = SolarDay(self.get_year(), self.get_month(), 1)
-        return first_day.next(self._index * 7 - self.index_of(first_day.get_week().get_index() - self._start.get_index(), 7))
+        first_day: SolarDay = SolarDay(self._year, self._month, 1)
+        return first_day.next(self._index * 7 - self.index_of(first_day.get_week().get_index() - self._start, 7))
 
-    def get_days(self) -> list[SolarDay]:
+    def get_days(self) -> List[SolarDay]:
         """
         本周公历日列表
         :return: 公历日列表
         """
-        l: [SolarDay] = []
+        l: List[SolarDay] = []
         d: SolarDay = self.get_first_day()
         l.append(d)
         for i in range(1, 7):
@@ -479,27 +437,25 @@ class SolarWeek(AbstractTyme):
         return o and o.get_first_day() == self.get_first_day()
 
 
-class SolarDay(AbstractTyme):
+class SolarDay(DayUnit):
     """
     公历日
     """
-    NAMES: [str] = ['1日', '2日', '3日', '4日', '5日', '6日', '7日', '8日', '9日', '10日', '11日', '12日', '13日', '14日', '15日', '16日', '17日', '18日', '19日', '20日', '21日', '22日', '23日', '24日', '25日', '26日', '27日', '28日', '29日', '30日', '31日']
-    _month: SolarMonth
-    """公历月"""
-    _day: int
-    """日"""
+    NAMES: List[str] = ['1日', '2日', '3日', '4日', '5日', '6日', '7日', '8日', '9日', '10日', '11日', '12日', '13日', '14日', '15日', '16日', '17日', '18日', '19日', '20日', '21日', '22日', '23日', '24日', '25日', '26日', '27日', '28日', '29日', '30日', '31日']
 
-    def __init__(self, year: int, month: int, day: int):
+    @staticmethod
+    def validate(year: int, month: int, day: int) -> None:
         if day < 1:
             raise ValueError(f'illegal solar day: {year}-{month}-{day}')
-        m: SolarMonth = SolarMonth(year, month)
         if 1582 == year and 10 == month:
             if (4 < day < 15) or day > 31:
                 raise ValueError(f'illegal solar day: {year}-{month}-{day}')
-        elif day > m.get_day_count():
+        elif day > SolarMonth.from_ym(year, month).get_day_count():
             raise ValueError(f'illegal solar day: {year}-{month}-{day}')
-        self._month = m
-        self._day = day
+
+    def __init__(self, year: int, month: int, day: int):
+        SolarDay.validate(year, month, day)
+        super().__init__(year, month, day)
 
     @classmethod
     def from_ymd(cls, year: int, month: int, day: int) -> SolarDay:
@@ -509,25 +465,7 @@ class SolarDay(AbstractTyme):
         """
         :return: 公历月
         """
-        return self._month
-
-    def get_year(self) -> int:
-        """
-        :return: 年
-        """
-        return self._month.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 月
-        """
-        return self._month.get_month()
-
-    def get_day(self) -> int:
-        """
-        :return: 日
-        """
-        return self._day
+        return SolarMonth.from_ym(self._year, self._month)
 
     def get_week(self) -> Week:
         """
@@ -539,14 +477,14 @@ class SolarDay(AbstractTyme):
         """
         :return: 星座 Constellation
         """
-        y: int = self.get_month() * 100 + self._day
+        y: int = self._month * 100 + self._day
         return Constellation.from_index(9 if y > 1221 or y < 120 else 10 if y < 219 else 11 if y < 321 else 0 if y < 420 else 1 if y < 521 else 2 if y < 622 else 3 if y < 723 else 4 if y < 823 else 5 if y < 923 else 6 if y < 1024 else 7 if y < 1123 else 8)
 
     def get_name(self) -> str:
         return self.NAMES[self._day - 1]
 
     def __str__(self) -> str:
-        return self._month.__str__() + self.get_name()
+        return f'{self.get_solar_month()}{self.get_name()}'
 
     def next(self, n: int) -> SolarDay:
         return self.get_julian_day().next(n).get_solar_day()
@@ -557,13 +495,11 @@ class SolarDay(AbstractTyme):
         :param target: 公历日
         :return: true/false
         """
-        a_year: int = self.get_year()
-        b_year: int = target.get_year()
-        if a_year != b_year:
-            return a_year < b_year
-        a_month: int = self.get_month()
-        b_month: int = target.get_month()
-        return a_month < b_month if a_month != b_month else self._day < target.get_day()
+        y: int = target.get_year()
+        if self._year != y:
+            return self._year < y
+        m: int = target.get_month()
+        return self._month < m if self._month != m else self._day < target.get_day()
 
     def is_after(self, target: SolarDay) -> bool:
         """
@@ -571,13 +507,11 @@ class SolarDay(AbstractTyme):
         :param target: 公历日
         :return: true/false
         """
-        a_year: int = self.get_year()
-        b_year: int = target.get_year()
-        if a_year != b_year:
-            return a_year > b_year
-        a_month: int = self.get_month()
-        b_month: int = target.get_month()
-        return a_month > b_month if a_month != b_month else self._day > target.get_day()
+        y: int = target.get_year()
+        if self._year != y:
+            return self._year > y
+        m: int = target.get_month()
+        return self._month > m if self._month != m else self._day > target.get_day()
 
     def get_term(self) -> SolarTerm:
         """
@@ -589,8 +523,8 @@ class SolarDay(AbstractTyme):
         """
         :return: 节气第几天
         """
-        y: int = self.get_year()
-        i: int = self.get_month() * 2
+        y: int = self._year
+        i: int = self._month * 2
         if i == 24:
             y += 1
             i = 0
@@ -607,9 +541,7 @@ class SolarDay(AbstractTyme):
         :param start: 起始星期，1234560分别代表星期一至星期天
         :return: 公历周
         """
-        y: int = self.get_year()
-        m: int = self.get_month()
-        return SolarWeek(y, m, ceil((self._day + SolarDay(y, m, 1).get_week().next(-start).get_index()) / 7.0) - 1, start)
+        return SolarWeek(self._year, self._month, ceil((self._day + SolarDay(self._year, self._month, 1).get_week().next(-start).get_index()) / 7.0) - 1, start)
 
     def get_phenology_day(self) -> PhenologyDay:
         """
@@ -631,13 +563,13 @@ class SolarDay(AbstractTyme):
         """
         return self.get_phenology_day().get_phenology()
 
-    def get_dog_day(self) -> DogDay | None:
+    def get_dog_day(self) -> Union[DogDay, None]:
         """
         当天所在的三伏天
         :return: 三伏天 DogDay
         """
         # 夏至
-        xia_zhi: SolarTerm = SolarTerm(self.get_year(), 12)
+        xia_zhi: SolarTerm = SolarTerm(self._year, 12)
         # 第1个庚日
         start: SolarDay = xia_zhi.get_solar_day()
         # 第3个庚日，即初伏第1天
@@ -668,13 +600,13 @@ class SolarDay(AbstractTyme):
             return DogDay(Dog(2), days)
         return None
 
-    def get_plum_rain_day(self) -> PlumRainDay | None:
+    def get_plum_rain_day(self) -> Union[PlumRainDay, None]:
         """
         当天所在的梅雨天（芒种后的第1个丙日入梅，小暑后的第1个未日出梅）
         :return: 梅雨天
         """
         # 芒种
-        grain_in_ear: SolarTerm = SolarTerm(self.get_year(), 11)
+        grain_in_ear: SolarTerm = SolarTerm(self._year, 11)
         start: SolarDay = grain_in_ear.get_solar_day()
         # 芒种后的第1个丙日
         start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(2))
@@ -691,7 +623,7 @@ class SolarDay(AbstractTyme):
         :return: 人元司令分野
         """
         from tyme4py.sixtycycle import HideHeavenStemDay, HideHeavenStem
-        day_counts: [int] = [3, 5, 7, 9, 10, 30]
+        day_counts: List[int] = [3, 5, 7, 9, 10, 30]
         term: SolarTerm = self.get_term()
         if term.is_qi():
             term = term.next(-1)
@@ -725,15 +657,14 @@ class SolarDay(AbstractTyme):
             hide_type = HideHeavenStemType.MAIN
         return HideHeavenStemDay(HideHeavenStem(heaven_stem_index, hide_type), day_index)
 
-    def get_nine_day(self) -> NineDay | None:
+    def get_nine_day(self) -> Union[NineDay, None]:
         """
         当天所在的数九天
         :return: 数九天 NineDay
         """
-        year: int = self.get_year()
-        start: SolarDay = SolarTerm(year + 1, 0).get_solar_day()
+        start: SolarDay = SolarTerm(self._year + 1, 0).get_solar_day()
         if self.is_before(start):
-            start = SolarTerm(year, 0).get_solar_day()
+            start = SolarTerm(self._year, 0).get_solar_day()
 
         end: SolarDay = start.next(81)
         if self.is_before(start) or (not self.is_before(end)):
@@ -747,7 +678,7 @@ class SolarDay(AbstractTyme):
         位于当年的索引
         :return: 索引
         """
-        return self.subtract(SolarDay(self.get_year(), 1, 1))
+        return self.subtract(SolarDay(self._year, 1, 1))
 
     def subtract(self, target: SolarDay) -> int:
         """
@@ -762,14 +693,14 @@ class SolarDay(AbstractTyme):
         公历日转儒略日
         :return: 儒略日
         """
-        return JulianDay.from_ymd_hms(self.get_year(), self.get_month(), self._day, 0, 0, 0)
+        return JulianDay.from_ymd_hms(self._year, self._month, self._day, 0, 0, 0)
 
     def get_lunar_day(self) -> LunarDay:
         """
         :return: 农历日
         """
         from tyme4py.lunar import LunarMonth, LunarDay
-        m: LunarMonth = LunarMonth.from_ym(self.get_year(), self.get_month())
+        m: LunarMonth = LunarMonth.from_ym(self._year, self._month)
         days: int = self.subtract(m.get_first_julian_day().get_solar_day())
         while days < 0:
             m = m.next(-1)
@@ -784,19 +715,19 @@ class SolarDay(AbstractTyme):
         from tyme4py.rabbyung import RabByungDay
         return RabByungDay.from_solar_day(self)
 
-    def get_legal_holiday(self) -> LegalHoliday | None:
+    def get_legal_holiday(self) -> Union[LegalHoliday, None]:
         """
         法定假日，如果当天不是法定假日，返回None
         :return: 法定假日
         """
-        return LegalHoliday.from_ymd(self.get_year(), self.get_month(), self._day)
+        return LegalHoliday.from_ymd(self._year, self._month, self._day)
 
-    def get_festival(self) -> SolarFestival | None:
+    def get_festival(self) -> Union[SolarFestival, None]:
         """
         公历现代节日，如果当天不是公历现代节日，返回None
         :return: 公历现代节日
         """
-        return SolarFestival.from_ymd(self.get_year(), self.get_month(), self._day)
+        return SolarFestival.from_ymd(self._year, self._month, self._day)
 
     def get_phase_day(self) -> PhaseDay:
         """
@@ -819,29 +750,16 @@ class SolarDay(AbstractTyme):
         return self.get_phase_day().get_phase()
 
 
-class SolarTime(AbstractTyme):
-    """公历时刻"""
-    _day: SolarDay
-    """公历日"""
-    _hour: int
-    """时"""
-    _minute: int
-    """分"""
-    _second: int
-    """秒"""
+class SolarTime(SecondUnit):
+
+    @staticmethod
+    def validate(year: int, month: int, day: int, hour: int, minute: int, second: int) -> None:
+        SecondUnit.validate(year, month, day, hour, minute, second)
+        SolarDay.validate(year, month, day)
 
     def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int):
-        if hour < 0 or hour > 23:
-            raise ValueError(f'illegal hour: {hour}')
-        if minute < 0 or minute > 59:
-            raise ValueError(f'illegal minute: {minute}')
-        if second < 0 or second > 59:
-            raise ValueError(f'illegal second: {second}')
-
-        self._day = SolarDay(year, month, day)
-        self._hour = hour
-        self._minute = minute
-        self._second = second
+        SolarTime.validate(year, month, day, hour, minute, second)
+        super().__init__(year, month, day, hour, minute, second)
 
     @classmethod
     def from_ymd_hms(cls, year: int, month: int, day: int, hour: int, minute: int, second: int) -> SolarTime:
@@ -860,49 +778,13 @@ class SolarTime(AbstractTyme):
         """
         :return: 公历日
         """
-        return self._day
-
-    def get_year(self) -> int:
-        """
-        :return: 年
-        """
-        return self._day.get_year()
-
-    def get_month(self) -> int:
-        """
-        :return: 月
-        """
-        return self._day.get_month()
-
-    def get_day(self) -> int:
-        """
-        :return: 日
-        """
-        return self._day.get_day()
-
-    def get_hour(self) -> int:
-        """
-        :return: 时
-        """
-        return self._hour
-
-    def get_minute(self) -> int:
-        """
-        :return: 分
-        """
-        return self._minute
-
-    def get_second(self) -> int:
-        """
-        :return: 秒
-        """
-        return self._second
+        return SolarDay.from_ymd(self._year, self._month, self._day)
 
     def get_name(self) -> str:
         return f'{self._hour:02d}:{self._minute:02d}:{self._second:02d}'
 
     def __str__(self) -> str:
-        return f'{self._day} {self.get_name()}'
+        return f'{self.get_solar_day()} {self.get_name()}'
 
     def next(self, n: int) -> SolarTime:
         """
@@ -911,7 +793,7 @@ class SolarTime(AbstractTyme):
         :return:  公历时刻
         """
         if n == 0:
-            return SolarTime(self.get_year(), self.get_month(), self.get_day(), self._hour, self._minute, self._second)
+            return SolarTime(self._year, self._month, self._day, self._hour, self._minute, self._second)
         ts: int = self._second + n
         tm: int = self._minute + floor(ts / 60)
         ts %= 60
@@ -928,7 +810,7 @@ class SolarTime(AbstractTyme):
         if th < 0:
             th += 24
             td -= 1
-        d: SolarDay = self._day.next(td)
+        d: SolarDay = self.get_solar_day().next(td)
         return SolarTime(d.get_year(), d.get_month(), d.get_day(), th, tm, ts)
 
     def is_before(self, target: SolarTime) -> bool:
@@ -937,11 +819,15 @@ class SolarTime(AbstractTyme):
         :param target: 公历时刻
         :return: true/false
         """
-        if not self._day == target.get_solar_day():
-            return self._day.is_before(target.get_solar_day())
-        if self._hour != target.get_hour():
-            return self._hour < target.get_hour()
-        return self._minute < target.get_minute() if self._minute != target.get_minute() else self._second < target.get_second()
+        a_day: SolarDay = self.get_solar_day()
+        b_day: SolarDay = target.get_solar_day()
+        if a_day != b_day:
+            return a_day.is_before(b_day)
+        h: int = target.get_hour()
+        if self._hour != h:
+            return self._hour < h
+        m: int = target.get_minute()
+        return self._minute < m if self._minute != m else self._second < target.get_second()
 
     def is_after(self, target: SolarTime) -> bool:
         """
@@ -949,11 +835,15 @@ class SolarTime(AbstractTyme):
         :param target: 公历时刻
         :return: true/false
         """
-        if not self._day == target.get_solar_day():
-            return self._day.is_after(target.get_solar_day())
-        if self._hour != target.get_hour():
-            return self._hour > target.get_hour()
-        return self._minute > target.get_minute() if self._minute != target.get_minute() else self._second > target.get_second()
+        a_day: SolarDay = self.get_solar_day()
+        b_day: SolarDay = target.get_solar_day()
+        if a_day != b_day:
+            return a_day.is_after(b_day)
+        h: int = target.get_hour()
+        if self._hour != h:
+            return self._hour > h
+        m: int = target.get_minute()
+        return self._minute > m if self._minute != m else self._second > target.get_second()
 
     def get_term(self) -> SolarTerm:
         """
@@ -980,7 +870,7 @@ class SolarTime(AbstractTyme):
         公历时刻转儒略日
         :return: 儒略日
         """
-        return JulianDay.from_ymd_hms(self._day.get_year(), self._day.get_month(), self._day.get_day(), self._hour, self._minute, self._second)
+        return JulianDay.from_ymd_hms(self._year, self._month, self._day, self._hour, self._minute, self._second)
 
     def subtract(self, target: SolarTime) -> int:
         """
@@ -988,7 +878,7 @@ class SolarTime(AbstractTyme):
         :param target: 公历时刻
         :return: 秒数
         """
-        days: int = self._day.subtract(target.get_solar_day())
+        days: int = self.get_solar_day().subtract(target.get_solar_day())
         cs: int = self._hour * 3600 + self._minute * 60 + self._second
         ts: int = target.get_hour() * 3600 + target.get_minute() * 60 + target.get_second()
         seconds: int = cs - ts
@@ -1004,7 +894,7 @@ class SolarTime(AbstractTyme):
         :return: 农历时辰
         """
         from tyme4py.lunar import LunarDay, LunarHour
-        d: LunarDay = self._day.get_lunar_day()
+        d: LunarDay = self.get_solar_day().get_lunar_day()
         return LunarHour(d.get_year(), d.get_month(), d.get_day(), self._hour, self._minute, self._second)
 
     def get_sixty_cycle_hour(self) -> SixtyCycleHour:

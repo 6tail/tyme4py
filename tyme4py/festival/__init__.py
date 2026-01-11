@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 
 from tyme4py import AbstractTyme
 from tyme4py.enums import FestivalType
@@ -17,7 +17,7 @@ class LunarFestival(AbstractTyme):
     农历传统节日--依据国家标准《农历的编算和颁行》GB/T 33661-2017
     农历传统节日有：春节、元宵节、龙头节、上巳节、清明节、端午节、七夕节、中元节、中秋节、重阳节、冬至节、腊八节、除夕。
     """
-    NAMES: [str] = ['春节', '元宵节', '龙头节', '上巳节', '清明节', '端午节', '七夕节', '中元节', '中秋节', '重阳节', '冬至节', '腊八节', '除夕']
+    NAMES: List[str] = ['春节', '元宵节', '龙头节', '上巳节', '清明节', '端午节', '七夕节', '中元节', '中秋节', '重阳节', '冬至节', '腊八节', '除夕']
     """名称"""
     DATA: str = '@0000101@0100115@0200202@0300303@04107@0500505@0600707@0700715@0800815@0900909@10124@1101208@122'
     _type: FestivalType
@@ -28,10 +28,10 @@ class LunarFestival(AbstractTyme):
     """农历日"""
     _name: str
     """名称"""
-    _solar_term: SolarTerm | None
+    _solar_term: Union[SolarTerm, None]
     """节气"""
 
-    def __init__(self, festival_type: FestivalType, day: LunarDay, solar_term: SolarTerm | None, data: str | None = None):
+    def __init__(self, festival_type: FestivalType, day: LunarDay, solar_term: Union[SolarTerm, None], data: Union[str, None] = None):
         """
         通过农历日 LunarDay得到
         :param festival_type: 节日类型
@@ -46,7 +46,7 @@ class LunarFestival(AbstractTyme):
         self._name = LunarFestival.NAMES[self._index]
 
     @classmethod
-    def from_index(cls, year: int, index: int) -> LunarFestival | None:
+    def from_index(cls, year: int, index: int) -> Union[LunarFestival, None]:
         """
         指定索引得到
         :param year: 年
@@ -54,7 +54,7 @@ class LunarFestival(AbstractTyme):
         :return:
         """
         if index < 0 or index >= cls.NAMES.__len__():
-            raise ValueError(f'illegal index: {index}')
+            return None
         from tyme4py.lunar import LunarDay
         from tyme4py.solar import SolarTerm
         pattern = re.compile(f"@{index:02}\\d+")
@@ -74,7 +74,7 @@ class LunarFestival(AbstractTyme):
         return None
 
     @classmethod
-    def from_ymd(cls, year: int, month: int, day: int) -> LunarFestival | None:
+    def from_ymd(cls, year: int, month: int, day: int) -> Union[LunarFestival, None]:
         """
         指定农历年、月、日得到
         :param year: 农历年
@@ -128,7 +128,7 @@ class LunarFestival(AbstractTyme):
         """
         return self._type
 
-    def get_solar_term(self) -> SolarTerm | None:
+    def get_solar_term(self) -> Union[SolarTerm, None]:
         """
         节气，非节气返回None
         :return:  节气
@@ -146,7 +146,7 @@ class LunarFestival(AbstractTyme):
 
 class SolarFestival(AbstractTyme):
     """公历现代节日有：元旦、三八妇女节、植树节、五一劳动节、五四青年节、六一儿童节、建党节、八一建军节、教师节、国庆节。"""
-    NAMES: [str] = ['元旦', '三八妇女节', '植树节', '五一劳动节', '五四青年节', '六一儿童节', '建党节', '八一建军节', '教师节', '国庆节']
+    NAMES: List[str] = ['元旦', '三八妇女节', '植树节', '五一劳动节', '五四青年节', '六一儿童节', '建党节', '八一建军节', '教师节', '国庆节']
     DATA: str = '@00001011950@01003081950@02003121979@03005011950@04005041950@05006011950@06007011941@07008011933@08009101985@09010011950'
     _type: FestivalType
     """类型"""
@@ -174,7 +174,7 @@ class SolarFestival(AbstractTyme):
         self._name = self.NAMES[self._index]
 
     @classmethod
-    def from_index(cls, year: int, index: int) -> SolarFestival | None:
+    def from_index(cls, year: int, index: int) -> Union[SolarFestival, None]:
         """
         指定索引得到
         :param year:  年份
@@ -182,7 +182,7 @@ class SolarFestival(AbstractTyme):
         :return:
         """
         if index < 0 or index >= cls.NAMES.__len__():
-            raise ValueError(f'illegal index: {index}')
+            return None
         from tyme4py.solar import SolarDay
         pattern = re.compile(f"@{index:02}\\d+")
         matcher = pattern.search(cls.DATA)
@@ -196,7 +196,7 @@ class SolarFestival(AbstractTyme):
         return None
 
     @classmethod
-    def from_ymd(cls, year: int, month: int, day: int) -> SolarFestival | None:
+    def from_ymd(cls, year: int, month: int, day: int) -> Union[SolarFestival, None]:
         """
         指定年、月、日得到
         :param year:  年
@@ -245,7 +245,7 @@ class SolarFestival(AbstractTyme):
     def __str__(self) -> str:
         return f'{self._day} {self._name}'
 
-    def next(self, n: int) -> SolarFestival | None:
+    def next(self, n: int) -> Union[SolarFestival, None]:
         size: int = SolarFestival.NAMES.__len__()
         i: int = self._index + n
         return SolarFestival.from_index(int((self._day.get_year() * size + i) / size), self.index_of(i, size))

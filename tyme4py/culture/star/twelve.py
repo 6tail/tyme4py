@@ -1,16 +1,18 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 from tyme4py.culture import Luck
 
 
 class TwelveStar(LoopTyme):
     """黄道黑道十二神"""
-    NAMES: [str] = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
+    NAMES: List[str] = ['青龙', '明堂', '天刑', '朱雀', '金匮', '天德', '白虎', '玉堂', '天牢', '玄武', '司命', '勾陈']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -34,10 +36,10 @@ class TwelveStar(LoopTyme):
 
 class Ecliptic(LoopTyme):
     """黄道黑道就两种，依次为：黄道、黑道。"""
-    NAMES: [str] = ["黄道", "黑道"]
+    NAMES: List[str] = ["黄道", "黑道"]
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

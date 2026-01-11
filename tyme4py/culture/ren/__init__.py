@@ -1,16 +1,18 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 from tyme4py.culture import Luck, Element
 
 
 class MinorRen(LoopTyme):
     """小六壬"""
-    NAMES: [str] = ['大安', '留连', '速喜', '赤口', '小吉', '空亡']
+    NAMES: List[str] = ['大安', '留连', '速喜', '赤口', '小吉', '空亡']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     def next(self, n: int) -> MinorRen:

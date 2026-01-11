@@ -1,16 +1,18 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 from tyme4py.culture import Direction, Element
 
 
 class Dipper(LoopTyme):
     """北斗九星"""
-    NAMES: [str] = ['天枢', '天璇', '天玑', '天权', '玉衡', '开阳', '摇光', '洞明', '隐元']
+    NAMES: List[str] = ['天枢', '天璇', '天玑', '天权', '玉衡', '开阳', '摇光', '洞明', '隐元']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -27,10 +29,10 @@ class Dipper(LoopTyme):
 
 class NineStar(LoopTyme):
     """九星"""
-    NAMES: [str] = ['一', '二', '三', '四', '五', '六', '七', '八', '九']
+    NAMES: List[str] = ['一', '二', '三', '四', '五', '六', '七', '八', '九']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

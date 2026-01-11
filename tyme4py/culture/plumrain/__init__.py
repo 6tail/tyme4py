@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme, AbstractCultureDay
 
 
 class PlumRain(LoopTyme):
     """梅雨"""
-    NAMES: [str] = ['入梅', '出梅']
+    NAMES: List[str] = ['入梅', '出梅']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme, AbstractCultureDay
 
 
 class Dog(LoopTyme):
     """三伏"""
-    NAMES: [str] = ['初伏', '中伏', '末伏']
+    NAMES: List[str] = ['初伏', '中伏', '末伏']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

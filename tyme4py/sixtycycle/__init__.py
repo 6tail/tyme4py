@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from math import floor, ceil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, List
 
 from tyme4py import LoopTyme, AbstractCulture, AbstractCultureDay, AbstractTyme
 from tyme4py.culture import Element, Direction, Zodiac, Terrain, Sound, Ten, Twenty, Duty, God, Taboo
@@ -30,7 +30,7 @@ class ThreePillars(AbstractCulture):
     _day: SixtyCycle
     """日柱"""
 
-    def __init__(self, year: SixtyCycle | str, month: SixtyCycle | str, day: SixtyCycle | str):
+    def __init__(self, year: Union[SixtyCycle, str], month: Union[SixtyCycle, str], day: Union[SixtyCycle, str]):
         """
         :param year: 年干支
         :param month: 月干支
@@ -64,7 +64,7 @@ class ThreePillars(AbstractCulture):
     def get_name(self) -> str:
         return f'{self._year} {self._month} {self._day}'
 
-    def get_solar_days(self, start_year: int, end_year: int) -> list[SolarDay]:
+    def get_solar_days(self, start_year: int, end_year: int) -> List[SolarDay]:
         """
         三柱转公历日列表
         :param start_year: 开始年份，支持1-9999年
@@ -72,7 +72,7 @@ class ThreePillars(AbstractCulture):
         :return: 公历日 SolarDay的列表
         """
         from tyme4py.solar import SolarDay, SolarTerm
-        l: [SolarDay] = []
+        l: List[SolarDay] = []
         # 月地支距寅月的偏移值
         m: int = self._month.get_earth_branch().next(-2).get_index()
         # 月天干要一致
@@ -111,10 +111,10 @@ class ThreePillars(AbstractCulture):
 
 class EarthBranch(LoopTyme):
     """地支（地元）"""
-    NAMES: [str] = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+    NAMES: List[str] = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -147,7 +147,7 @@ class EarthBranch(LoopTyme):
         """
         return HeavenStem([9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8][self.get_index()])
 
-    def get_hide_heaven_stem_middle(self) -> HeavenStem | None:
+    def get_hide_heaven_stem_middle(self) -> Union[HeavenStem, None]:
         """
         藏干之中气，无中气的返回None
         :return: 天干 HeavenStem
@@ -155,7 +155,7 @@ class EarthBranch(LoopTyme):
         n: int = [-1, 9, 2, -1, 1, 6, 5, 3, 8, -1, 7, 0][self.get_index()]
         return None if n == -1 else HeavenStem(n)
 
-    def get_hide_heaven_stem_residual(self) -> HeavenStem | None:
+    def get_hide_heaven_stem_residual(self) -> Union[HeavenStem, None]:
         """
         藏干之余气，无余气的返回None
         :return: 天干 HeavenStem
@@ -163,12 +163,12 @@ class EarthBranch(LoopTyme):
         n: int = [-1, 7, 4, -1, 9, 4, -1, 1, 4, -1, 3, -1][self.get_index()]
         return None if n == -1 else HeavenStem(n)
 
-    def get_hide_heaven_stems(self) -> list[HideHeavenStem]:
+    def get_hide_heaven_stems(self) -> List[HideHeavenStem]:
         """
         :return: 藏干列表
         """
-        l: [HideHeavenStem] = [HideHeavenStem(self.get_hide_heaven_stem_main(), HideHeavenStemType.MAIN)]
-        o: HeavenStem | None = self.get_hide_heaven_stem_middle()
+        l: List[HideHeavenStem] = [HideHeavenStem(self.get_hide_heaven_stem_main(), HideHeavenStemType.MAIN)]
+        o: Union[HeavenStem, None] = self.get_hide_heaven_stem_middle()
         if o:
             l.append(HideHeavenStem(o, HideHeavenStemType.MIDDLE))
         o = self.get_hide_heaven_stem_residual()
@@ -228,7 +228,7 @@ class EarthBranch(LoopTyme):
         """
         return EarthBranch(19 - self.get_index())
 
-    def combine(self, target: EarthBranch) -> Element | None:
+    def combine(self, target: EarthBranch) -> Union[Element, None]:
         """
         合化
         子丑合化土，寅亥合化木，卯戌合化火，辰酉合化金，巳申合化水，午未合化火
@@ -240,10 +240,10 @@ class EarthBranch(LoopTyme):
 
 class HeavenStem(LoopTyme):
     """天干（天元）"""
-    NAMES: [str] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+    NAMES: List[str] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
@@ -362,7 +362,7 @@ class HideHeavenStem(AbstractCulture):
     _type: HideHeavenStemType
     """藏干类型"""
 
-    def __init__(self, heaven_stem: HeavenStem | str | int, hide_heaven_stem_type: HideHeavenStemType):
+    def __init__(self, heaven_stem: Union[HeavenStem, str, int], hide_heaven_stem_type: HideHeavenStemType):
         if isinstance(heaven_stem, int) or isinstance(heaven_stem, str):
             self._heaven_stem = HeavenStem(heaven_stem)
         else:
@@ -406,10 +406,10 @@ class HideHeavenStemDay(AbstractCultureDay):
 
 class SixtyCycle(LoopTyme):
     """六十甲子(六十干支周)"""
-    _NAMES: [str] = ['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未', '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳', '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯', '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑', '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥']
+    _NAMES: List[str] = ['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未', '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳', '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯', '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑', '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self._NAMES, index_or_name)
 
     @classmethod
@@ -458,7 +458,7 @@ class SixtyCycle(LoopTyme):
         """
         return Ten((self.get_heaven_stem().get_index() - self.get_earth_branch().get_index()) // 2)
 
-    def get_extra_earth_branches(self) -> list[EarthBranch]:
+    def get_extra_earth_branches(self) -> List[EarthBranch]:
         """
         旬空(空亡)，因地支比天干多2个，旬空则为每一轮干支一一配对后多出来的2个地支
         :return: 旬空(空亡)
@@ -534,12 +534,12 @@ class SixtyCycleYear(AbstractTyme):
         h: HeavenStem = HeavenStem.from_index((self.get_sixty_cycle().get_heaven_stem().get_index() + 1) * 2)
         return SixtyCycleMonth(self, SixtyCycle.from_name(f'{h.get_name()}寅'))
 
-    def get_months(self) -> list[SixtyCycleMonth]:
+    def get_months(self) -> List[SixtyCycleMonth]:
         """
         干支月列表
         :return: 干支月列表
         """
-        l: [SixtyCycleMonth] = []
+        l: List[SixtyCycleMonth] = []
         m: SixtyCycleMonth = self.get_first_month()
         l.append(m)
         for i in range(1, 12):
@@ -613,12 +613,12 @@ class SixtyCycleMonth(AbstractTyme):
         from tyme4py.solar import SolarTerm
         return SixtyCycleDay.from_solar_day(SolarTerm.from_index(self._year.get_year(), 3+self.get_index_in_year()*2).get_solar_day())
 
-    def get_days(self) -> list[SixtyCycleDay]:
+    def get_days(self) -> List[SixtyCycleDay]:
         """
         本月的干支日列表
         :return: 支日列表
         """
-        l: [SixtyCycleDay] = []
+        l: List[SixtyCycleDay] = []
         d: SixtyCycleDay = self.get_first_day()
         while d.get_sixty_cycle_month() == self:
             l.append(d)
@@ -790,34 +790,34 @@ class SixtyCycleDay(AbstractTyme):
         from tyme4py.culture.star.twentyeight import TwentyEightStar
         return TwentyEightStar([10, 18, 26, 6, 14, 22, 2][self._solar_day.get_week().get_index()]).next(-7 * self._day.get_earth_branch().get_index())
 
-    def get_gods(self) -> list[God]:
+    def get_gods(self) -> List[God]:
         """
         神煞列表(吉神宜趋，凶神宜忌)
         :return: 神煞列表
         """
         return God.get_day_gods(self.get_month(), self._day)
 
-    def get_recommends(self) -> list[Taboo]:
+    def get_recommends(self) -> List[Taboo]:
         """
         今日 宜
         :return: 宜忌列表
         """
         return Taboo.get_day_recommends(self.get_month(), self._day)
 
-    def get_avoids(self) -> list[Taboo]:
+    def get_avoids(self) -> List[Taboo]:
         """
         今日 忌
         :return: 宜忌列表
         """
         return Taboo.get_day_avoids(self.get_month(), self._day)
 
-    def get_hours(self) -> list[SixtyCycleHour]:
+    def get_hours(self) -> List[SixtyCycleHour]:
         """
         当天的干支时辰列表
         :return: 干支时辰列表
         """
         from tyme4py.solar import SolarDay, SolarTime
-        l: [SixtyCycleHour] = []
+        l: List[SixtyCycleHour] = []
         d: SolarDay = self._solar_day.next(-1)
         t: SolarTime = SolarTime.from_ymd_hms(d.get_year(), d.get_month(), d.get_day(), 23, 0, 0)
         h: SixtyCycleHour = SixtyCycleHour.from_solar_time(t)
@@ -966,14 +966,14 @@ class SixtyCycleHour(AbstractTyme):
         """
         return EightChar(self.get_year(), self.get_month(), self.get_day(), self._hour)
 
-    def get_recommends(self) -> list[Taboo]:
+    def get_recommends(self) -> List[Taboo]:
         """
         时辰 宜
         :return: 宜忌列表
         """
         return Taboo.get_hour_recommends(self.get_day(), self._hour)
 
-    def get_avoids(self) -> list[Taboo]:
+    def get_avoids(self) -> List[Taboo]:
         """
         时辰 忌
         :return: 宜忌列表

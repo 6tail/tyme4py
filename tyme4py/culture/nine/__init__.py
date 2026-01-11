@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import Union, List
+
 from tyme4py import LoopTyme, AbstractCultureDay
 
 
 class Nine(LoopTyme):
     """数九"""
-    NAMES: [str] = ['一九', '二九', '三九', '四九', '五九', '六九', '七九', '八九', '九九']
+    NAMES: List[str] = ['一九', '二九', '三九', '四九', '五九', '六九', '七九', '八九', '九九']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod

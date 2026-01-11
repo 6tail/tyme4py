@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import warnings
 from math import ceil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, List
 
 from tyme4py import AbstractCulture, AbstractTyme
 from tyme4py.culture import Duty
@@ -26,7 +26,7 @@ class EightChar(AbstractCulture):
     _hour: SixtyCycle
     """时柱"""
 
-    def __init__(self, year: SixtyCycle | str, month: SixtyCycle | str, day: SixtyCycle | str, hour: SixtyCycle | str):
+    def __init__(self, year: Union[SixtyCycle, str], month: Union[SixtyCycle, str], day: Union[SixtyCycle, str], hour: Union[SixtyCycle, str]):
         """
         :param year: 年干支
         :param month: 月干支
@@ -124,7 +124,7 @@ class EightChar(AbstractCulture):
     def get_name(self) -> str:
         return f'{self._three_pillars} {self._hour}'
 
-    def get_solar_times(self, start_year: int, end_year: int) -> list[SolarTime]:
+    def get_solar_times(self, start_year: int, end_year: int) -> List[SolarTime]:
         """
         八字转公历时刻列表
         :param start_year: 开始年份，支持1-9999年
@@ -133,7 +133,7 @@ class EightChar(AbstractCulture):
         """
         from tyme4py.sixtycycle import HeavenStem
         from tyme4py.solar import SolarTime, SolarTerm
-        l: [SolarTime] = []
+        l: List[SolarTime] = []
         year = self.get_year()
         month = self.get_month()
         day = self.get_day()
@@ -150,7 +150,7 @@ class EightChar(AbstractCulture):
         # 时辰地支转时刻
         h: int = self._hour.get_earth_branch().get_index() * 2
         # 兼容子时多流派
-        hours: [int] = [0, 23] if h == 0 else [h]
+        hours: List[int] = [0, 23] if h == 0 else [h]
         base_year: int = start_year - 1
         if base_year > y:
             y += 60 * int(ceil((base_year - y) / 60.0))

@@ -1,16 +1,18 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
+from typing import List, Union
+
 from tyme4py import LoopTyme
 from tyme4py.culture import Week
 
 
 class SevenStar(LoopTyme):
     """七曜（七政、七纬、七耀）"""
-    NAMES: [str] = ['日', '月', '火', '水', '木', '金', '土']
+    NAMES: List[str] = ['日', '月', '火', '水', '木', '金', '土']
     """名称"""
 
-    def __init__(self, index_or_name: int | str):
+    def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
 
     @classmethod
