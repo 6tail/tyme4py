@@ -27,6 +27,7 @@ setup(
         'tyme4py.sixtycycle',
         'tyme4py.solar',
         'tyme4py.rabbyung',
+        'tyme4py.unit',
         'tyme4py.util'
     ],
     url='https://github.com/6tail/tyme4py',
