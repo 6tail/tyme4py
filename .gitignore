@@ -14,3 +14,4 @@ __pycache__/
 .tox
 .cache
 .DS_Store
+uv.lock

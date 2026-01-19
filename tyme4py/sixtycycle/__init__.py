@@ -665,22 +665,15 @@ class SixtyCycleDay(AbstractTyme):
     @classmethod
     def from_solar_day(cls, solar_day: SolarDay) -> SixtyCycleDay:
         from tyme4py.solar import SolarTerm, SolarDay
-        from tyme4py.lunar import LunarYear, LunarMonth, LunarDay
-        solar_year: int = solar_day.get_year()
-        spring_solar_day: SolarDay = SolarTerm.from_index(solar_year, 3).get_solar_day()
-        lunar_day: LunarDay = solar_day.get_lunar_day()
-        lunar_year: LunarYear = lunar_day.get_lunar_month().get_lunar_year()
-        if lunar_year.get_year() == solar_year:
-            if solar_day.is_before(spring_solar_day):
-                lunar_year = lunar_year.next(-1)
-        elif lunar_year.get_year() < solar_year:
-            if not solar_day.is_before(spring_solar_day):
-                lunar_year = lunar_year.next(1)
         term: SolarTerm = solar_day.get_term()
-        index: int = term.get_index() - 3
-        if index < 0 and term.get_solar_day().is_after(spring_solar_day):
-            index += 24
-        return cls(solar_day, SixtyCycleMonth(SixtyCycleYear.from_year(lunar_year.get_year()), LunarMonth.from_ym(solar_year, 1).get_sixty_cycle().next(int(floor(index * 0.5)))), lunar_day.get_sixty_cycle())
+        index: int = term.get_index()
+        offset: int = -1
+        if index < 3:
+            if index == 0:
+                offset = -2
+        else:
+            offset = (index - 3) // 2
+        return cls(solar_day, SixtyCycleYear.from_year(term.get_year()).get_first_month().next(offset), SixtyCycle.from_index(solar_day.subtract(SolarDay.from_ymd(2000, 1, 7))))
 
     def get_solar_day(self) -> SolarDay:
         """

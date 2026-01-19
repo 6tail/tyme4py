@@ -528,7 +528,7 @@ class SolarDay(DayUnit):
         if i == 24:
             y += 1
             i = 0
-        term: SolarTerm = SolarTerm(y, i)
+        term: SolarTerm = SolarTerm(y, i + 1)
         day: SolarDay = term.get_solar_day()
         while self.is_before(day):
             term = term.next(-1)
