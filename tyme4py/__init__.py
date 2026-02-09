@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Union, List
 
+__version__ = '1.4.4'
 
 class Culture(ABC):
     """传统文化(民俗)"""

@@ -111,3 +111,18 @@ class TestLunarDay(unittest.TestCase):
     def test28(self):
         lunar: LunarDay = LunarDay(2024, 3, 5)
         assert lunar.get_minor_ren().get_name() == '大安'
+
+    def test29(self):
+        lunar: LunarDay = LunarDay(2026, 1, 1)
+        assert lunar.get_lunar_month().get_lunar_year().get_sixty_cycle().get_name() == '丙午'
+        assert lunar.get_sixty_cycle_day().get_year().get_name() == '丙午'
+
+    def test30(self):
+        lunar: LunarDay = LunarDay(2025, 12, 16)
+        assert lunar.get_lunar_month().get_lunar_year().get_sixty_cycle().get_name() == '乙巳'
+        assert lunar.get_sixty_cycle_day().get_year().get_name() == '乙巳'
+
+    def test31(self):
+        lunar: LunarDay = LunarDay(2025, 12, 17)
+        assert lunar.get_lunar_month().get_lunar_year().get_sixty_cycle().get_name() == '乙巳'
+        assert lunar.get_sixty_cycle_day().get_year().get_name() == '丙午'

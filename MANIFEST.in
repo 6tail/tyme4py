@@ -1,0 +1,13 @@
+# 包含的文件
+include LICENSE
+include *.md
+include pyproject.toml
+include setup.py
+include MANIFEST.in
+
+# 包含项目代码
+recursive-include tyme4py *.py
+
+# 排除测试相关
+exclude test/*
+exclude *.egg-info/*

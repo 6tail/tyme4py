@@ -1,13 +1,20 @@
+[build-system]
+requires = ["setuptools>=80.10.2", "twine>=6.2.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "tyme4py"
-version = "1.4.3"
-description = "Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、星座、干支、生肖、节气、法定假日等。"
+dynamic = ["version"]
 requires-python = ">=3.10"
-dependencies = [
-    "setuptools>=80.9.0",
-    "twine>=6.2.0",
-]
 readme = "README.md"
-license = {file = "LICENSE"}
+license-files = ["LICENSE"]
 authors = [{name = "6tail", email = "6tail@6tail.cn"}]
 keywords = ["公历", "农历", "藏历", "儒略日", "星座", "干支", "节气", "法定假日"]
+description = "Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、星座、干支、生肖、节气、法定假日等。"
+
+[tool.setuptools]
+include-package-data = true
+packages.find = {where = ["."], exclude = ["test", "test.*"]}
+
+[tool.setuptools.dynamic]
+version = {attr = "tyme4py.__version__"}

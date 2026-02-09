@@ -57,8 +57,8 @@ class LunarFestival(AbstractTyme):
             return None
         from tyme4py.lunar import LunarDay
         from tyme4py.solar import SolarTerm
-        pattern = re.compile(f"@{index:02}\\d+")
-        matcher = pattern.search(cls.DATA)
+        pattern: re.Pattern[str] = re.compile(f"@{index:02}\\d+")
+        matcher: Union[re.Match[str], None] = pattern.search(cls.DATA)
         if matcher:
             data: str = matcher.group()
             festival_type: int = ord(data[3]) - 48
@@ -84,27 +84,29 @@ class LunarFestival(AbstractTyme):
         """
         from tyme4py.lunar import LunarDay
         from tyme4py.solar import SolarTerm
-        pattern = re.compile("@\\d{2}0" + "{:02}{:02}".format(month, day))
-        matcher = pattern.search(cls.DATA)
+        pattern: re.Pattern[str] = re.compile("@\\d{2}0" + "{:02}{:02}".format(month, day))
+        matcher: Union[re.Match[str], None] = pattern.search(cls.DATA)
         if matcher:
             return cls(FestivalType.DAY, LunarDay(year, month, day), None, matcher.group())
-        reg = re.compile('@\\d{2}1\\d{2}')
-        matcher = reg.search(cls.DATA)
+        lunar_day: LunarDay = LunarDay.from_ymd(year, month, day)
+        solar_day: SolarDay = lunar_day.get_solar_day()
+        pattern = re.compile('@\\d{2}1\\d{2}')
+        matcher = pattern.search(cls.DATA)
         while matcher:
             data: str = matcher.group()
-            solar_term: SolarTerm = SolarTerm(year, int(data[4:], 10))
-            lunar_day: LunarDay = solar_term.get_solar_day().get_lunar_day()
-            if lunar_day.get_year() == year and lunar_day.get_month() == month and lunar_day.get_day() == day:
-                return cls(FestivalType.TERM, lunar_day, solar_term, data)
+            term: SolarTerm = SolarTerm(year, int(data[4:], 10))
+            term_day: SolarDay = term.get_solar_day()
+            if term_day.get_year() == solar_day.get_year() and term_day.get_month() == solar_day.get_month() and term_day.get_day() == solar_day.get_day():
+                return cls(FestivalType.TERM, lunar_day, term, data)
             last_position = matcher.end()
-            matcher = reg.match(cls.DATA, last_position)
-        pattern = re.compile("@\\d{2}2")
-        matcher = pattern.search(cls.DATA)
-        if matcher:
-            lunar_day: LunarDay = LunarDay(year, month, day)
-            next_day: LunarDay = lunar_day.next(1)
-            if next_day.get_month() == 1 and next_day.get_day() == 1:
-                return cls(FestivalType.EVE, lunar_day, None, matcher.group())
+            matcher = pattern.match(cls.DATA, last_position)
+        if month == 12 and day > 28:
+            pattern = re.compile("@\\d{2}2")
+            matcher = pattern.search(cls.DATA)
+            if matcher:
+                next_day: LunarDay = lunar_day.next(1)
+                if next_day.get_month() == 1 and next_day.get_day() == 1:
+                    return cls(FestivalType.EVE, lunar_day, None, matcher.group())
         return None
 
     def get_name(self) -> str:
@@ -184,12 +186,11 @@ class SolarFestival(AbstractTyme):
         if index < 0 or index >= cls.NAMES.__len__():
             return None
         from tyme4py.solar import SolarDay
-        pattern = re.compile(f"@{index:02}\\d+")
-        matcher = pattern.search(cls.DATA)
+        pattern: re.Pattern[str] = re.compile(f"@{index:02}\\d+")
+        matcher: Union[re.Match[str], None] = pattern.search(cls.DATA)
         if matcher:
             data: str = matcher.group()
-            type: int = ord(data[3]) - 48
-            if type == 0:
+            if ord(data[3]) - 48 == 0:
                 start_year: int = int(data[8:], 10)
                 if year >= start_year:
                     return cls(FestivalType.DAY, SolarDay(year, int(data[4: 6], 10), int(data[6: 8], 10)), start_year, data)
@@ -205,8 +206,8 @@ class SolarFestival(AbstractTyme):
         :return:
         """
         from tyme4py.solar import SolarDay
-        pattern = re.compile("@\\d{2}0" + f"{month:02}{day:02}\\d+")
-        matcher = pattern.search(cls.DATA)
+        pattern: re.Pattern[str] = re.compile("@\\d{2}0" + f"{month:02}{day:02}\\d+")
+        matcher: Union[re.Match[str], None] = pattern.search(cls.DATA)
         if matcher:
             data: str = matcher.group()
             start_year: int = int(data[8:], 10)
