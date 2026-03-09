@@ -12,8 +12,6 @@ class JulianDay(AbstractTyme):
     """儒略日"""
     J2000: float = 2451545
     """2000年儒略日数(2000-1-1 12:00:00 UTC)"""
-    _day: float
-    """儒略日"""
 
     def __init__(self, day: float):
         """

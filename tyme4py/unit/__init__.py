@@ -9,8 +9,6 @@ from tyme4py import AbstractTyme
 class YearUnit(AbstractTyme, ABC):
     """年"""
 
-    _year: int
-
     def __init__(self, year: int):
         self._year = year
 
@@ -20,8 +18,6 @@ class YearUnit(AbstractTyme, ABC):
 
 class MonthUnit(YearUnit, ABC):
     """月"""
-
-    _month: int
 
     def __init__(self, year: int, month: int):
         super().__init__(year)
@@ -34,8 +30,6 @@ class MonthUnit(YearUnit, ABC):
 class DayUnit(MonthUnit, ABC):
     """日"""
 
-    _day: int
-
     def __init__(self, year: int, month: int, day: int):
         super().__init__(year, month)
         self._day = day
@@ -46,10 +40,6 @@ class DayUnit(MonthUnit, ABC):
 
 class SecondUnit(DayUnit, ABC):
     """秒"""
-
-    _hour: int
-    _minute: int
-    _second: int
 
     def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int):
         super().__init__(year, month, day)
@@ -78,9 +68,6 @@ class SecondUnit(DayUnit, ABC):
 
 class WeekUnit(MonthUnit, ABC):
     """周"""
-
-    _index: int
-    _start: int
 
     def __init__(self, year: int, month: int, index: int, start: int):
         super().__init__(year, month)

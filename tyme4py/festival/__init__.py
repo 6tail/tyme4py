@@ -20,16 +20,6 @@ class LunarFestival(AbstractTyme):
     NAMES: List[str] = ['春节', '元宵节', '龙头节', '上巳节', '清明节', '端午节', '七夕节', '中元节', '中秋节', '重阳节', '冬至节', '腊八节', '除夕']
     """名称"""
     DATA: str = '@0000101@0100115@0200202@0300303@04107@0500505@0600707@0700715@0800815@0900909@10124@1101208@122'
-    _type: FestivalType
-    """类型"""
-    _index: int
-    """索引"""
-    _day: LunarDay
-    """农历日"""
-    _name: str
-    """名称"""
-    _solar_term: Union[SolarTerm, None]
-    """节气"""
 
     def __init__(self, festival_type: FestivalType, day: LunarDay, solar_term: Union[SolarTerm, None], data: Union[str, None] = None):
         """
@@ -42,8 +32,9 @@ class LunarFestival(AbstractTyme):
         self._type = festival_type
         self._day = day
         self._solar_term = solar_term
-        self._index = int(data[1: 3], 10)
-        self._name = LunarFestival.NAMES[self._index]
+        index: int = int(data[1: 3], 10)
+        self._index = index
+        self._name = LunarFestival.NAMES[index]
 
     @classmethod
     def from_index(cls, year: int, index: int) -> Union[LunarFestival, None]:
@@ -98,14 +89,12 @@ class LunarFestival(AbstractTyme):
             term_day: SolarDay = term.get_solar_day()
             if term_day.get_year() == solar_day.get_year() and term_day.get_month() == solar_day.get_month() and term_day.get_day() == solar_day.get_day():
                 return cls(FestivalType.TERM, lunar_day, term, data)
-            last_position = matcher.end()
-            matcher = pattern.match(cls.DATA, last_position)
-        if month == 12 and day > 28:
+            matcher = pattern.match(cls.DATA, matcher.end())
+        if abs(month) == 12 and day > 28:
             pattern = re.compile("@\\d{2}2")
             matcher = pattern.search(cls.DATA)
             if matcher:
-                next_day: LunarDay = lunar_day.next(1)
-                if next_day.get_month() == 1 and next_day.get_day() == 1:
+                if lunar_day.next(1).get_year() != year:
                     return cls(FestivalType.EVE, lunar_day, None, matcher.group())
         return None
 
@@ -150,16 +139,6 @@ class SolarFestival(AbstractTyme):
     """公历现代节日有：元旦、三八妇女节、植树节、五一劳动节、五四青年节、六一儿童节、建党节、八一建军节、教师节、国庆节。"""
     NAMES: List[str] = ['元旦', '三八妇女节', '植树节', '五一劳动节', '五四青年节', '六一儿童节', '建党节', '八一建军节', '教师节', '国庆节']
     DATA: str = '@00001011950@01003081950@02003121979@03005011950@04005041950@05006011950@06007011941@07008011933@08009101985@09010011950'
-    _type: FestivalType
-    """类型"""
-    _index: int
-    """索引"""
-    _day: SolarDay
-    """公历日"""
-    _name: str
-    """名称"""
-    _start_year: int
-    """起始年"""
 
     def __init__(self, festival_type: FestivalType, day: SolarDay, start_year: int, data: str):
         """
@@ -172,8 +151,9 @@ class SolarFestival(AbstractTyme):
         self._type = festival_type
         self._day = day
         self._start_year = start_year
-        self._index = int(data[1: 3], 10)
-        self._name = self.NAMES[self._index]
+        index: int = int(data[1: 3], 10)
+        self._index = index
+        self._name = self.NAMES[index]
 
     @classmethod
     def from_index(cls, year: int, index: int) -> Union[SolarFestival, None]:

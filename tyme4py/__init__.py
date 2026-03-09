@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Union, List
 
-__version__ = '1.4.4'
+__version__ = '1.4.5'
+
 
 class Culture(ABC):
     """传统文化(民俗)"""
@@ -22,8 +23,8 @@ class Tyme(Culture):
     def next(self, n: int) -> Union[Tyme, None]:
         """
         推移
-        :param n:推移步数
-        :return: 推移后的Tyme
+        :param n: 推移步数
+        :return: 推移后的Tyme或None
         """
         pass
 
@@ -67,10 +68,13 @@ class AbstractTyme(AbstractCulture, Tyme):
 
 class AbstractCultureDay(AbstractCulture):
     """带天索引的传统文化抽象"""
-    _culture: AbstractCulture
-    _day_index: int
 
     def __init__(self, culture: AbstractCulture, day_index: int):
+        """
+        初始化
+        :param culture: 传统文化抽象
+        :param day_index: 天索引
+        """
         self._culture = culture
         self._day_index = day_index
 
@@ -93,13 +97,10 @@ class AbstractCultureDay(AbstractCulture):
 
 class LoopTyme(AbstractTyme):
     """可轮回的Tyme"""
-    _names: List[str]
-    """名称列表"""
-    _index: int
-    """索引，从0开始"""
 
     def __init__(self, names: List[str], index_or_name: Union[int, str]):
         """
+        初始化
         :param names: 名称列表
         :param index_or_name: 索引，支持负数，自动轮转; 名称
         """
@@ -120,10 +121,6 @@ class LoopTyme(AbstractTyme):
             raise ValueError(f"illegal name: {index_or_name}")
 
     def get_name(self) -> str:
-        """
-        名称
-        :return: 名称
-        """
         return self._names[self._index]
 
     def get_index(self) -> int:
@@ -150,11 +147,32 @@ class LoopTyme(AbstractTyme):
 
     def steps_to(self, target_index: int) -> int:
         """
-        到目标索引的步数
+        到目标索引的步数（从左往右顺序）
         :param target_index: 目标索引
-        :return: 步数
+        :return: 步数（>=0）
         """
         return self.index_of(target_index - self._index, self.get_size())
+
+    def steps_back_to(self, target_index: int) -> int:
+        """
+        到目标索引的步数（从右往左逆序）
+        :param target_index: 目标索引
+        :return: 步数（<=0）
+        """
+        n = self.get_size()
+        return -((self._index - target_index + n) % n)
+
+    def steps_close_to(self, target_index: int) -> int:
+        """
+        到目标索引的最少步数
+        :param target_index: 目标索引
+        :return: 步数（从左往右顺序>=0，从右往左逆序<=0）
+        """
+        d1 = self.steps_to(target_index)
+        d2 = self.steps_back_to(target_index)
+        if d1 <= abs(d2):
+            return d1
+        return d2
 
     @abstractmethod
     def next(self, n: int) -> Union[LoopTyme, None]:

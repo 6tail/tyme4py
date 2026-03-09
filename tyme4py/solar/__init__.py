@@ -11,6 +11,7 @@ from tyme4py.culture.nine import NineDay, Nine
 from tyme4py.culture.phenology import PhenologyDay, Phenology
 from tyme4py.culture.plumrain import PlumRainDay, PlumRain
 from tyme4py.enums import HideHeavenStemType
+from tyme4py.event import Event
 from tyme4py.unit import YearUnit, MonthUnit, WeekUnit, DayUnit, SecondUnit
 from tyme4py.util import ShouXingUtil
 from tyme4py.jd import JulianDay
@@ -27,10 +28,6 @@ class SolarTerm(LoopTyme):
     """节气"""
     NAMES = ['冬至', '小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪']
     """名称"""
-    _year: int
-    """年"""
-    _cursory_julian_day: float
-    """儒略日（用于日历，只精确到日中午12:00）"""
 
     def __init__(self, year: int, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
@@ -154,8 +151,6 @@ class SolarYear(YearUnit):
 class SolarHalfYear(YearUnit):
     """公历半年"""
     NAMES: List[str] = ['上半年', '下半年']
-    _index: int
-    """索引"""
 
     @staticmethod
     def validate(year: int, index: int) -> None:
@@ -393,10 +388,9 @@ class SolarWeek(WeekUnit):
         return f'{self.get_solar_month()}{self.get_name()}'
 
     def next(self, n: int) -> SolarWeek:
-        d: int = self._index
+        d: int = self._index + n
         m: SolarMonth = self.get_solar_month()
         if n > 0:
-            d += n
             week_count: int = m.get_week_count(self._start)
             while d >= week_count:
                 d -= week_count
@@ -405,7 +399,6 @@ class SolarWeek(WeekUnit):
                     d += 1
                 week_count = m.get_week_count(self._start)
         elif n < 0:
-            d += n
             while d < 0:
                 if m.get_first_day().get_week().get_index() != self._start:
                     d -= 1
@@ -568,52 +561,29 @@ class SolarDay(DayUnit):
         当天所在的三伏天
         :return: 三伏天 DogDay
         """
-        # 夏至
-        xia_zhi: SolarTerm = SolarTerm(self._year, 12)
-        # 第1个庚日
-        start: SolarDay = xia_zhi.get_solar_day()
-        # 第3个庚日，即初伏第1天
-        start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(6) + 20)
-        days: int = self.subtract(start)
-        # 初伏以前
-        if days < 0:
+        # 初伏，夏至后第3个庚日
+        d0: SolarDay = Event.builder().term_heaven_stem(12, 6, 20).build().get_solar_day(self._year)
+        # 中伏，夏至后第4个庚日
+        d1: SolarDay = Event.builder().term_heaven_stem(12, 6, 30).build().get_solar_day(self._year)
+        # 末伏，立秋后第1个庚日
+        d2: SolarDay = Event.builder().term_heaven_stem(15, 6, 0).build().get_solar_day(self._year)
+        if self.is_before(d0) or self.is_after(d2.next(9)):
             return None
-        if days < 10:
-            return DogDay(Dog(0), days)
-
-        # 第4个庚日，中伏第1天
-        start = start.next(10)
-        days = self.subtract(start)
-        if days < 10:
-            return DogDay(Dog(1), days)
-
-        # 第5个庚日，中伏第11天或末伏第1天
-        start = start.next(10)
-        days = self.subtract(start)
-        # 立秋
-        if xia_zhi.next(3).get_solar_day().is_after(start):
-            if days < 10:
-                return DogDay(Dog(1), days + 10)
-            start = start.next(10)
-            days = self.subtract(start)
-        if days < 10:
-            return DogDay(Dog(2), days)
-        return None
+        if not self.is_before(d2):
+            return DogDay(Dog.from_index(2), self.subtract(d2))
+        if not self.is_before(d1):
+            return DogDay(Dog.from_index(1), self.subtract(d1))
+        return DogDay(Dog.from_index(0), self.subtract(d0))
 
     def get_plum_rain_day(self) -> Union[PlumRainDay, None]:
         """
         当天所在的梅雨天（芒种后的第1个丙日入梅，小暑后的第1个未日出梅）
         :return: 梅雨天
         """
-        # 芒种
-        grain_in_ear: SolarTerm = SolarTerm(self._year, 11)
-        start: SolarDay = grain_in_ear.get_solar_day()
-        # 芒种后的第1个丙日
-        start = start.next(start.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(2))
-        # 小暑
-        end: SolarDay = grain_in_ear.next(2).get_solar_day()
-        # 小暑后的第1个未日
-        end = end.next(end.get_lunar_day().get_sixty_cycle().get_earth_branch().steps_to(7))
+        # 入梅，芒种后第1个丙日
+        start: SolarDay = Event.builder().term_heaven_stem(11, 2, 0).build().get_solar_day(self._year)
+        # 出梅，小暑后第1个未日
+        end: SolarDay = Event.builder().term_earth_branch(13, 7, 0).build().get_solar_day(self._year)
         if self.is_before(start) or self.is_after(end):
             return None
         return PlumRainDay(PlumRain(1), 0) if self == end else PlumRainDay(PlumRain(0), self.subtract(start))
@@ -745,7 +715,7 @@ class SolarDay(DayUnit):
     def get_phase(self) -> Phase:
         """
         月相
-        :return: 月相 Phase。
+        :return: 月相 Phase
         """
         return self.get_phase_day().get_phase()
 
@@ -908,7 +878,7 @@ class SolarTime(SecondUnit):
     def get_phase(self) -> Phase:
         """
         月相
-        :return: 月相 Phase。
+        :return: 月相 Phase
         """
         month = self.get_lunar_hour().get_lunar_day().get_lunar_month().next(1)
         p = Phase.from_index(month.get_year(), month.get_month_with_leap(), 0)

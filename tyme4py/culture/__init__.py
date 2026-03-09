@@ -18,9 +18,7 @@ if TYPE_CHECKING:
 
 
 class Animal(LoopTyme):
-    """
-    动物
-    """
+    """动物"""
     NAMES: List[str] = ['蛟', '龙', '貉', '兔', '狐', '虎', '豹', '獬', '牛', '蝠', '鼠', '燕', '猪', '獝', '狼', '狗', '彘', '鸡', '乌', '猴', '猿', '犴', '羊', '獐', '马', '鹿', '蛇', '蚓']
     """名称"""
 
@@ -263,7 +261,6 @@ class God(LoopTyme):
 class KitchenGodSteed(AbstractCulture):
     NUMBERS: List[str] = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二']
     """数字"""
-    _first_day_sixty_cycle: SixtyCycle
 
     def __init__(self, lunar_year):
         from tyme4py.lunar import LunarDay
@@ -375,10 +372,6 @@ class Phase(LoopTyme):
     """月相"""
     NAMES: List[str] = ['新月', '蛾眉月', '上弦月', '盈凸月', '满月', '亏凸月', '下弦月', '残月']
     """名称"""
-    """农历年"""
-    _lunar_year: int
-    """农历月"""
-    _lunar_month: int
 
     def __init__(self, lunar_year: int, lunar_month: int, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)

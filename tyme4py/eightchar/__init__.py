@@ -18,16 +18,11 @@ if TYPE_CHECKING:
 
 
 class EightChar(AbstractCulture):
-    """
-    八字
-    """
-    _three_pillars: ThreePillars
-    """三柱"""
-    _hour: SixtyCycle
-    """时柱"""
+    """八字"""
 
     def __init__(self, year: Union[SixtyCycle, str], month: Union[SixtyCycle, str], day: Union[SixtyCycle, str], hour: Union[SixtyCycle, str]):
         """
+        初始化
         :param year: 年干支
         :param month: 月干支
         :param day: 日干支
@@ -71,47 +66,33 @@ class EightChar(AbstractCulture):
         :return: 干支 SixtyCycle
         """
         from tyme4py.sixtycycle import SixtyCycle
-        m = self.get_month()
-        return SixtyCycle(m.get_heaven_stem().next(1).get_name() + m.get_earth_branch().next(3).get_name())
+        m: SixtyCycle = self.get_month()
+        return SixtyCycle.from_index(m.get_heaven_stem().next(1).get_index() * 6 - m.get_earth_branch().next(3).get_index() * 5)
 
     def get_fetal_breath(self) -> SixtyCycle:
         """
         胎息
         :return: 干支 SixtyCycle
         """
-        from tyme4py.sixtycycle import SixtyCycle, EarthBranch
-        d = self.get_day()
-        return SixtyCycle(d.get_heaven_stem().next(5).get_name() + EarthBranch(13 - d.get_earth_branch().get_index()).get_name())
+        from tyme4py.sixtycycle import SixtyCycle
+        d: SixtyCycle = self.get_day()
+        return SixtyCycle.from_index(d.get_heaven_stem().next(5).get_index() * 6 + d.get_earth_branch().get_index() * 5 - 65)
 
     def get_own_sign(self) -> SixtyCycle:
         """
         命宫
         :return: 干支 SixtyCycle
         """
-        from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        m: int = self.get_month().get_earth_branch().get_index() - 1
-        if m < 1:
-            m += 12
-        h: int = self._hour.get_earth_branch().get_index() - 1
-        if h < 1:
-            h += 12
-        offset: int = m + h
-        offset = (26 if offset >= 14 else 14) - offset
-        return SixtyCycle(HeavenStem((self.get_year().get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
+        from tyme4py.sixtycycle import SixtyCycle
+        return SixtyCycle.from_index(self.get_year().get_heaven_stem().get_index() * 12 + (27 - self.get_month().get_earth_branch().get_index() - self._hour.get_earth_branch().get_index()) % 12 + 2)
 
     def get_body_sign(self) -> SixtyCycle:
         """
         身宫
         :return: 干支 SixtyCycle
         """
-        from tyme4py.sixtycycle import SixtyCycle, EarthBranch, HeavenStem
-        offset: int = self.get_month().get_earth_branch().get_index() - 1
-        if offset < 1:
-            offset += 12
-        offset += self._hour.get_earth_branch().get_index() + 1
-        if offset > 12:
-            offset -= 12
-        return SixtyCycle(HeavenStem((self.get_year().get_heaven_stem().get_index() + 1) * 2 + offset - 1).get_name() + EarthBranch(offset + 1).get_name())
+        from tyme4py.sixtycycle import SixtyCycle
+        return SixtyCycle.from_index(self.get_year().get_heaven_stem().get_index() * 12 + (11 + self.get_month().get_earth_branch().get_index() + self._hour.get_earth_branch().get_index()) % 12 + 2)
 
     def get_duty(self) -> Duty:
         """
@@ -191,22 +172,18 @@ class EightChar(AbstractCulture):
 
 class ChildLimitInfo:
     """童限信息"""
-    _start_time: SolarTime
-    """开始(即出生)的公历时刻"""
-    _end_time: SolarTime
-    """结束(即开始起运)的公历时刻"""
-    _year_count: int
-    """年数"""
-    _month_count: int
-    """月数"""
-    _day_count: int
-    """日数"""
-    _hour_count: int
-    """小时数"""
-    _minute_count: int
-    """分钟数"""
 
     def __init__(self, start_time: SolarTime, end_time: SolarTime, year_count: int, month_count: int, day_count: int, hour_count: int, minute_count: int):
+        """
+        初始化
+        :param start_time: 开始(即出生)的公历时刻
+        :param end_time: 结束(即开始起运)的公历时刻
+        :param year_count: 年数
+        :param month_count: 月数
+        :param day_count: 日数
+        :param hour_count: 小时数
+        :param minute_count: 分钟数
+        """
         self._start_time = start_time
         self._end_time = end_time
         self._year_count = year_count
@@ -217,7 +194,7 @@ class ChildLimitInfo:
 
     def get_start_time(self) -> SolarTime:
         """
-        :return:  开始(即出生)的公历时刻
+        :return: 开始(即出生)的公历时刻
         """
         return self._start_time
 
@@ -241,7 +218,7 @@ class ChildLimitInfo:
 
     def get_day_count(self) -> int:
         """
-        :return:  日数
+        :return: 日数
         """
         return self._day_count
 
@@ -262,14 +239,6 @@ class ChildLimit:
     """童限（从出生到起运的时间段）"""
     provider: ChildLimitProvider = DefaultChildLimitProvider()
     """童限计算接口"""
-    _eight_char: EightChar
-    """八字"""
-    _gender: Gender
-    """性别"""
-    _forward: bool
-    """顺逆"""
-    _info: ChildLimitInfo
-    """童限信息"""
 
     def __init__(self, birth_time: SolarTime, gender: Gender):
         """
@@ -413,13 +382,7 @@ class ChildLimit:
 
 
 class Fortune(AbstractTyme):
-    """
-    小运--在十年大运中，每一年为一小运。童限结束的公历时刻，既是大运的开始，也是小运的开始。
-    """
-    _child_limit: ChildLimit
-    """童限"""
-    _index: int
-    """序号"""
+    """小运--在十年大运中，每一年为一小运。童限结束的公历时刻，既是大运的开始，也是小运的开始。"""
 
     def __init__(self, child_limit: ChildLimit, index: int):
         """
@@ -464,11 +427,7 @@ class Fortune(AbstractTyme):
 
 
 class DecadeFortune(AbstractTyme):
-    """
-    大运（10年1大运）--自起运开始，每十年为一大运。童限结束的公历时刻，即开始起运，是大运的开始。
-    """
-    _child_limit: ChildLimit  # 童限
-    _index: int  # 序号
+    """大运（10年1大运）--自起运开始，每十年为一大运。童限结束的公历时刻，即开始起运，是大运的开始。"""
 
     def __init__(self, child_limit: ChildLimit, index: int):
         """

@@ -83,10 +83,6 @@ class FetusMonth(LoopTyme):
 
 class FetusDay(AbstractCulture):
     """逐日胎神"""
-    _fetus_heaven_stem: FetusHeavenStem
-    _fetus_earth_branch: FetusEarthBranch
-    _side: Side
-    _direction: Direction
 
     def __init__(self, sixty_cycle: SixtyCycle):
         self._fetus_heaven_stem = FetusHeavenStem(sixty_cycle.get_heaven_stem().get_index() % 5)

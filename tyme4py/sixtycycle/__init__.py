@@ -20,15 +20,7 @@ if TYPE_CHECKING:
 
 
 class ThreePillars(AbstractCulture):
-    """
-    三柱
-    """
-    _year: SixtyCycle
-    """年柱"""
-    _month: SixtyCycle
-    """月柱"""
-    _day: SixtyCycle
-    """日柱"""
+    """三柱"""
 
     def __init__(self, year: Union[SixtyCycle, str], month: Union[SixtyCycle, str], day: Union[SixtyCycle, str]):
         """
@@ -332,7 +324,7 @@ class HeavenStem(LoopTyme):
     def get_terrain(self, earth_branch: EarthBranch) -> Terrain:
         """
         长生十二神(地势)
-        长生十二神可通过不同的组合，得到自坐和星运。
+        长生十二神可通过不同的组合，得到自坐和星运
         :param: 地支
         :return：地势(长生十二神)
         """
@@ -350,17 +342,13 @@ class HeavenStem(LoopTyme):
         """
         合化（甲己合化土 乙庚合化金 丙辛合化水 丁壬合化木 戊癸合化火）
         :param target: 天干
-        :return: 能合化则返回五行属性，不能合化则返回null
+        :return: 能合化则返回五行属性，不能合化则返回None
         """
         return Element(self.get_index() + 2) if self.get_combine() == target else None
 
 
 class HideHeavenStem(AbstractCulture):
     """藏干（即人元，司令取天干，分野取天干的五行）"""
-    _heaven_stem: HeavenStem
-    """天干"""
-    _type: HideHeavenStemType
-    """藏干类型"""
 
     def __init__(self, heaven_stem: Union[HeavenStem, str, int], hide_heaven_stem_type: HideHeavenStemType):
         if isinstance(heaven_stem, int) or isinstance(heaven_stem, str):
@@ -471,7 +459,6 @@ class SixtyCycleYear(AbstractTyme):
     """
     干支年
     """
-    _year: int
 
     def __init__(self, year: int):
         if year < -1 or year > 9999:
@@ -485,7 +472,7 @@ class SixtyCycleYear(AbstractTyme):
     def get_year(self) -> int:
         """
         年
-        :return: 返回为干支年数字，范围为-1到9999。
+        :return: 干支年数字，范围为-1到9999
         """
         return self._year
 
@@ -508,21 +495,21 @@ class SixtyCycleYear(AbstractTyme):
     def get_twenty(self) -> Twenty:
         """
         运
-        :return: 返回为运 Twenty。
+        :return: 运 Twenty
         """
         return Twenty(floor((self._year - 1864) / 20))
 
     def get_nine_star(self) -> NineStar:
         """
         九星
-        :return: 返回为九星 NineStar。
+        :return: 九星 NineStar
         """
         return NineStar(63 + self.get_twenty().get_sixty().get_index() * 3 - self.get_sixty_cycle().get_index())
 
     def get_jupiter_direction(self) -> Direction:
         """
         太岁方位
-        :return: 返回为方位 Direction。
+        :return: 方位 Direction
         """
         return Direction([0, 7, 7, 2, 3, 3, 8, 1, 1, 6, 0, 0][self.get_sixty_cycle().get_earth_branch().get_index()])
 
@@ -531,8 +518,7 @@ class SixtyCycleYear(AbstractTyme):
         首月（依据五虎遁和正月起寅的规律）
         :return: 干支月
         """
-        h: HeavenStem = HeavenStem.from_index((self.get_sixty_cycle().get_heaven_stem().get_index() + 1) * 2)
-        return SixtyCycleMonth(self, SixtyCycle.from_name(f'{h.get_name()}寅'))
+        return SixtyCycleMonth(self, SixtyCycle.from_index(self._year * 12 - 46))
 
     def get_months(self) -> List[SixtyCycleMonth]:
         """
@@ -548,13 +534,7 @@ class SixtyCycleYear(AbstractTyme):
 
 
 class SixtyCycleMonth(AbstractTyme):
-    """
-    干支月
-    """
-    _year: SixtyCycleYear
-    """干支年"""
-    _month: SixtyCycle
-    """月柱"""
+    """干支月"""
 
     def __init__(self, year: SixtyCycleYear, month: SixtyCycle):
         """
@@ -592,7 +572,7 @@ class SixtyCycleMonth(AbstractTyme):
     def get_index_in_year(self) -> int:
         """
         位于当年的索引(0-11)，寅月为0，依次类推
-        :return: 返回为数字，范围0到11，寅月为0，依次类推。
+        :return: 数字，范围0到11，寅月为0，依次类推
         """
         return self._month.get_earth_branch().next(-2).get_index()
 
@@ -627,7 +607,7 @@ class SixtyCycleMonth(AbstractTyme):
 
     def get_nine_star(self) -> NineStar:
         """
-        :return: 九星 NineStar。
+        :return: 九星 NineStar
         """
         index = self._month.get_earth_branch().get_index()
         if index < 2:
@@ -637,7 +617,7 @@ class SixtyCycleMonth(AbstractTyme):
     def get_jupiter_direction(self) -> Direction:
         """
         太岁方位
-        :return: 方位 Direction。
+        :return: 方位 Direction
         """
         n: int = [7, -1, 1, 3][self._month.get_earth_branch().next(-2).get_index() % 4]
         return self._month.get_heaven_stem().get_direction() if n == -1 else Direction(n)
@@ -645,12 +625,6 @@ class SixtyCycleMonth(AbstractTyme):
 
 class SixtyCycleDay(AbstractTyme):
     """干支日"""
-    _solar_day: SolarDay
-    """公历日"""
-    _month: SixtyCycleMonth
-    """干支月"""
-    _day: SixtyCycle
-    """日柱"""
 
     def __init__(self, solar_day: SolarDay, month: SixtyCycleMonth, day: SixtyCycle):
         """
@@ -720,49 +694,43 @@ class SixtyCycleDay(AbstractTyme):
     def get_duty(self) -> Duty:
         """
         建除十二值神
-        :return: 建除十二值神 Duty。
+        :return: 建除十二值神 Duty
         """
         return Duty(self._day.get_earth_branch().get_index() - self.get_month().get_earth_branch().get_index())
 
     def get_twelve_star(self) -> TwelveStar:
         """
         黄道黑道十二神
-        :return: 黄道黑道十二神 TwelveStar。
+        :return: 黄道黑道十二神 TwelveStar
         """
         return TwelveStar(self._day.get_earth_branch().get_index() + (8 - self.get_month().get_earth_branch().get_index() % 6) * 2)
 
     def get_nine_star(self) -> NineStar:
         """
         九星
-        :return: 九星 NineStar。
+        :return: 九星 NineStar
         """
         from tyme4py.solar import SolarDay, SolarTerm
         d: SolarDay = self._solar_day
-        dong_zhi: SolarTerm = SolarTerm(d.get_year(), 0)
-        dong_zhi_solar: SolarDay = dong_zhi.get_solar_day()
-        xia_zhi_solar: SolarDay = dong_zhi.next(12).get_solar_day()
-        dong_zhi_solar2: SolarDay = dong_zhi.next(24).get_solar_day()
-        dong_zhi_index: int = dong_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
-        xia_zhi_index: int = xia_zhi_solar.get_lunar_day().get_sixty_cycle().get_index()
-        dong_zhi_index2: int = dong_zhi_solar2.get_lunar_day().get_sixty_cycle().get_index()
-        solar_shun_bai: SolarDay = dong_zhi_solar.next(60 - dong_zhi_index if dong_zhi_index > 29 else -dong_zhi_index)
-        solar_shun_bai2: SolarDay = dong_zhi_solar2.next(60 - dong_zhi_index2 if dong_zhi_index2 > 29 else -dong_zhi_index2)
-        solar_ni_zi: SolarDay = xia_zhi_solar.next(60 - xia_zhi_index if xia_zhi_index > 29 else -xia_zhi_index)
-        offset: int = 0
-        if not d.is_before(solar_shun_bai) and d.is_before(solar_ni_zi):
-            offset = d.subtract(solar_shun_bai)
-        elif not d.is_before(solar_ni_zi) and d.is_before(solar_shun_bai2):
-            offset = 8 - d.subtract(solar_ni_zi)
-        elif not d.is_before(solar_shun_bai2):
-            offset = d.subtract(solar_shun_bai2)
-        elif d.is_before(solar_shun_bai):
-            offset = 8 + solar_shun_bai.subtract(d)
-        return NineStar(offset)
+        y: int = d.get_year()
+        winter_solstice: SolarDay = SolarTerm.from_index(y, 0).get_solar_day()
+        summer_solstice: SolarDay = SolarTerm.from_index(y, 12).get_solar_day()
+        next_winter_solstice: SolarDay = SolarTerm.from_index(y + 1, 0).get_solar_day()
+        w: SolarDay = winter_solstice.next(winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        s: SolarDay = summer_solstice.next(summer_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        n: SolarDay = next_winter_solstice.next(next_winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        if d.is_before(w):
+            return NineStar.from_index(w.subtract(d) - 1)
+        elif d.is_before(s):
+            return NineStar.from_index(d.subtract(w))
+        elif d.is_before(n):
+            return NineStar.from_index(n.subtract(d) - 1)
+        return NineStar.from_index(d.subtract(n))
 
     def get_jupiter_direction(self) -> Direction:
         """
         太岁方位
-        :return: 方位 Direction。
+        :return: 方位 Direction
         """
         index: int = self._day.get_index()
         from tyme4py.culture import Element
@@ -771,17 +739,17 @@ class SixtyCycleDay(AbstractTyme):
     def get_fetus_day(self) -> FetusDay:
         """
         逐日胎神
-        :return:逐日胎神 FetusDay。
+        :return:逐日胎神 FetusDay
         """
         return FetusDay.from_sixty_cycle_day(self)
 
     def get_twenty_eight_star(self) -> TwentyEightStar:
         """
         二十八宿
-        :return: 二十八宿 TwentyEightStar。
+        :return: 二十八宿 TwentyEightStar
         """
         from tyme4py.culture.star.twentyeight import TwentyEightStar
-        return TwentyEightStar([10, 18, 26, 6, 14, 22, 2][self._solar_day.get_week().get_index()]).next(-7 * self._day.get_earth_branch().get_index())
+        return TwentyEightStar(10 + 8 * self._solar_day.get_week().get_index()).next(-7 * self._day.get_earth_branch().get_index())
 
     def get_gods(self) -> List[God]:
         """
@@ -825,15 +793,7 @@ class SixtyCycleDay(AbstractTyme):
 
 
 class SixtyCycleHour(AbstractTyme):
-    """
-    干支时辰
-    """
-    _solar_time: SolarTime
-    """公历时刻"""
-    _day: SixtyCycleDay
-    """干支日"""
-    _hour: SixtyCycle
-    """时柱"""
+    """干支时辰"""
 
     def __init__(self, solar_time: SolarTime):
         from tyme4py.solar import SolarTerm, SolarTime
@@ -932,20 +892,20 @@ class SixtyCycleHour(AbstractTyme):
     def get_twelve_star(self) -> TwelveStar:
         """
         黄道黑道十二神
-        :return: 黄道黑道十二神 TwelveStar。
+        :return: 黄道黑道十二神 TwelveStar
         """
         return TwelveStar(self._hour.get_earth_branch().get_index() + (8 - self.get_day().get_earth_branch().get_index() % 6) * 2)
 
     def get_nine_star(self) -> NineStar:
         """
         九星（时家紫白星歌诀：三元时白最为佳，冬至阳生顺莫差，孟日七宫仲一白，季日四绿发萌芽，每把时辰起甲子，本时星耀照光华，时星移入中宫去，顺飞八方逐细查。夏至阴生逆回首，孟归三碧季加六，仲在九宫时起甲，依然掌中逆轮跨。）
-        :return: 九星 NineStar。
+        :return: 九星 NineStar
         """
         from tyme4py.solar import SolarTerm, SolarDay
         solar: SolarDay = self._solar_time.get_solar_day()
         dong_zhi: SolarTerm = SolarTerm(solar.get_year(), 0)
         earth_branch_index: int = self.get_index_in_day() % 12
-        index: int = [8, 5, 2][self.get_day().get_earth_branch().get_index() % 3]
+        index: int = 8 - 3 * (self.get_day().get_earth_branch().get_index() % 3)
         if (not solar.is_before(dong_zhi.get_julian_day().get_solar_day())) and solar.is_before(dong_zhi.next(12).get_julian_day().get_solar_day()):
             index = 8 + earth_branch_index - index
         else:

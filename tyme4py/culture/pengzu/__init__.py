@@ -51,10 +51,6 @@ class PengZuHeavenStem(LoopTyme):
 
 class PengZu(AbstractCulture):
     """彭祖百忌"""
-    _peng_zu_heaven_stem: PengZuHeavenStem
-    """天干彭祖百忌"""
-    _peng_zu_earth_branch: PengZuEarthBranch
-    """地支彭祖百忌"""
 
     def __init__(self, sixty_cycle: SixtyCycle):
         self._peng_zu_heaven_stem = PengZuHeavenStem(sixty_cycle.get_heaven_stem().get_index())

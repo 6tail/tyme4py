@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Union, List, Dict
 
 from tyme4py import AbstractTyme
 from tyme4py.culture import Element, Zodiac
+from tyme4py.unit import MonthUnit, DayUnit
 
 if TYPE_CHECKING:
     from tyme4py.sixtycycle import SixtyCycle
@@ -49,51 +50,64 @@ class RabByungElement(Element):
 
 class RabByungYear(AbstractTyme):
     """藏历年(公历1027年为藏历元年，第一饶迥火兔年）"""
-    def __init__(self, rab_byung_index: int, sixty_cycle: SixtyCycle):
+
+    def __init__(self, rab_byung_index: int, element_index: int, zodiac_index: int):
+        """
+        :param rab_byung_index: 饶迥(胜生周)序号，从0开始
+        :param element_index: 五行索引，从0开始
+        :param zodiac_index: 生肖索引，从0开始
+        """
         if rab_byung_index < 0 or rab_byung_index > 150:
             raise ValueError(f'illegal rab-byung index: {rab_byung_index}')
-        self.rab_byung_index = rab_byung_index
-        self.sixty_cycle = sixty_cycle
+        if element_index < 0 or element_index >= len(Element.NAMES):
+            raise ValueError(f'illegal element index: {element_index}')
+        if zodiac_index < 0 or zodiac_index > len(Zodiac.NAMES):
+            raise ValueError(f'illegal zodiac index: {zodiac_index}')
+        self._rab_byung_index = rab_byung_index
+        self._element_index = element_index
+        self._zodiac_index = zodiac_index
+
+    @staticmethod
+    def validate(year: int) -> None:
+        if year < 1027 or year > 9999:
+            raise ValueError(f'illegal rab-byung year: {year}')
 
     @classmethod
     def from_sixty_cycle(cls, rab_byung_index: int, sixty_cycle: SixtyCycle) -> RabByungYear:
-        return cls(rab_byung_index, sixty_cycle)
+        return cls(rab_byung_index, sixty_cycle.get_heaven_stem().get_element().get_index(), sixty_cycle.get_earth_branch().get_zodiac().get_index())
 
     @classmethod
     def from_element_zodiac(cls, rab_byung_index: int, element: RabByungElement, zodiac: Zodiac) -> RabByungYear:
-        from tyme4py.sixtycycle import SixtyCycle
-        for i in range(60):
-            sc: SixtyCycle = SixtyCycle.from_index(i)
-            if sc.get_earth_branch().get_zodiac().get_name() == zodiac.get_name() and sc.get_heaven_stem().get_element().get_index() == element.get_index():
-                return cls(rab_byung_index, sc)
-        raise ValueError(f'illegal rab-byung element {element}, zodiac {zodiac}')
+        return cls(rab_byung_index, element.get_index(), zodiac.get_index())
 
     @classmethod
     def from_year(cls, year: int) -> RabByungYear:
         from tyme4py.sixtycycle import SixtyCycle
-        return cls((year - 1024) // 60, SixtyCycle.from_index(year - 4))
+        cls.validate(year)
+        return cls.from_sixty_cycle((year - 1024) // 60, SixtyCycle.from_index(year - 4))
 
     def get_rab_byung_index(self) -> int:
         """饶迥序号（从0开始）"""
-        return self.rab_byung_index
+        return self._rab_byung_index
 
     def get_sixty_cycle(self) -> SixtyCycle:
         """干支"""
-        return self.sixty_cycle
+        from tyme4py.sixtycycle import SixtyCycle
+        return SixtyCycle.from_index(6 * (self._element_index * 2 + self._zodiac_index % 2) - 5 * self._zodiac_index)
 
     def get_zodiac(self) -> Zodiac:
         """生肖"""
-        return self.sixty_cycle.get_earth_branch().get_zodiac()
+        return Zodiac.from_index(self._zodiac_index)
 
     def get_element(self) -> RabByungElement:
         """五行"""
-        return RabByungElement.from_index(self.sixty_cycle.get_heaven_stem().get_element().get_index())
+        return RabByungElement.from_index(self._element_index)
 
     def get_name(self) -> str:
         """完整名称"""
         digits: List[str] = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
         units: List[str] = ['', '十', '百']
-        n: int = self.rab_byung_index + 1
+        n: int = self._rab_byung_index + 1
         s: str = ''
         pos: int = 0
 
@@ -115,20 +129,23 @@ class RabByungYear(AbstractTyme):
 
     def get_year(self) -> int:
         """公历年份"""
-        return 1024 + self.rab_byung_index * 60 + self.sixty_cycle.get_index()
+        return 1024 + self._rab_byung_index * 60 + self.get_sixty_cycle().get_index()
 
     def get_leap_month(self) -> int:
         """闰月（闰月数字，1代表闰1月，0代表无闰月）"""
         y: int = 1
         m: int = 4
-        t: int = 0
+        t: int = 1
         current_year: int = self.get_year()
 
         while y < current_year:
-            i: int = m - 1 + (33 if t % 2 == 0 else 32)
-            y = (y * 12 + i) // 12
-            m = i % 12 + 1
-            t += 1
+            i: int = m + 31 + t
+            y += 2
+            m = i - 23
+            if i > 35:
+                y += 1
+                m -= 12
+            t = 1 - t
 
         return m if y == current_year else 0
 
@@ -139,7 +156,7 @@ class RabByungYear(AbstractTyme):
 
     def get_first_month(self) -> RabByungMonth:
         """首月"""
-        return RabByungMonth(self, 1)
+        return RabByungMonth(self.get_year(), 1)
 
     def get_month_count(self) -> int:
         """月份数量"""
@@ -148,28 +165,29 @@ class RabByungYear(AbstractTyme):
     def get_months(self) -> List[RabByungMonth]:
         """所有月份列表"""
         months: List[RabByungMonth] = []
+        y: int = self.get_year()
         leap_month: int = self.get_leap_month()
         for i in range(1, 13):
-            months.append(RabByungMonth(self, i))
+            months.append(RabByungMonth(y, i))
             if i == leap_month:
-                months.append(RabByungMonth(self, -i))
+                months.append(RabByungMonth(y, -i))
         return months
 
     def __str__(self) -> str:
         return self.get_name()
 
 
-class RabByungMonth(AbstractTyme):
+class RabByungMonth(MonthUnit):
     """藏历月，仅支持藏历1950年十二月至藏历2050年十二月"""
     NAMES = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
     ALIAS = ['神变月', '苦行月', '具香月', '萨嘎月', '作净月', '明净月', '具醉月', '具贤月', '天降月', '持众月', '庄严月', '满意月']
     DAYS: Dict[int, List[int]] = {}
-    _isInit: bool = False
+    _IS_INIT: bool = False
 
     # 初始化特殊日数据（1950-2050年）
     @staticmethod
     def _init():
-        if RabByungMonth._isInit:
+        if RabByungMonth._IS_INIT:
             return
 
         years: List[str] = "2c>,182[>1:2TA4ZI=n1E2Bk1J2Ff3Mk503Oc62g=,172^>1:2XA1>2UE2Bo1I2Fj3Lo62Fb3Mf5,03N^72b=1:2]A1>2ZF1B2VI2Em1K2Fe,2Lh1R3Na603P\\:172Y>1;2UB2=m2Dq1J2Eh,2Kl1Q3Me603Pa:172^>1;2YA2=p1C2UI,2Dk2Jp3QEc3Mi603Pf:3L[72b?1:2]A1<2UB2XH,2Cn1I2Ei1L2Ie1Q3Na703Q\\:2`@1;2XA,4\\H;m1B2TI2Em1L2Ij1Q3Nf603Q`903QW:,2[@1;2TB2XI1E4TMAh2Io3RFe3Mj603Pc803Q[;,2^?1;2WA2>q1E2Bm1I2Fi1M2Hc3Of70,3P^82a>1:2[A1>2WE1B2TI2Fm1L2Hf3Ni6,03Oa703PZ:3`A62V>4]F;q1B4YJ>l2Eq1L2Gi3Ml5,03Nd603Q_9172[>1;2XB2>p1E2VK2Fl,1K2Fc3Mh603Pc9172`>1;2\\B1>2UD2=j2En,1J2Fg3Mm62Ib3Pj;3M_703R[:2`B1=2YB2=n,1C2TI2Fk1L2Ig1P3Nd703Q_:152X<2[A,2<q1B2WI2Ep1L2Il1Q3Ni703Qc9152[:2^@,1;2WB2>o1E2Bk1I2Fh1M2Ib3Pf803R^9,2a?1;2ZA1>2UE2Bp1I2Fl1M2If3Oi80,3Pa803QY:2^A1>2ZE1B4WJ>j2Fp1M2Hi1N2H`,3Od703Q]:162Y>1;2VB2?o1E4VM@h2Gl1M,2Hd3Ng603Qa9172^>1;2ZB1?2UE2@l2Fo1L,2Gg3Mk62H`3Pf:172c?3QY;2_B1>2YD2?o1E,2TK2Fj1M2Ie1P3Mb703R^;172X=2\\C1>,2TD2WJ2Fn1L2Ij1P3Ng703Rb:162[<2_B1=,2VC2>m1E4TMAh2Io3QFe3Nl82Ja3Qf:152_;0,3RU<2ZB1>2TE2Bn1I2Fj1M2Je3Pk:2K^3Ra:,03RY;2]A1>2XE1B2TI2Fo1M2Ii1P2Ka3Qd8,03R]:3bB62W>4]F:q1B2?n1F4VNAh2Il1O2Jd,3Pg803Q`:162\\=1;2XB1?2TF2Bl2Ho1N,2Ig3Nk703Qd9162`>1;2]B1?2XE2Ao1G2TM,2Hj1M2Id1P3M_603R\\;172W>2\\E1@2TE,2?i2Gm1M2Ih1P3Md603Ra;172[=28q1?2WD,2?m2Fq1M2Il1P3Mi72I^3Re:162_<172W=,2ZC2?q1E2Bk1I2Fh1M2Jd1Q3M^52b;16,2Y<2]B1>2VE2Bp1I2Fm1M2Jh1Q2Lb3Re:15,2\\;3aC62U>2[E1B4WJ>k1F4TNBg2Jl1P2Le3Qh9,03R`:172Z=1:2VB2?q1F2Bk2Ip1P2Jg,1P2J_3Qc:162^=1;2[B1?2WF2Bo1H2Bg2Ij,1O2Jc3Qg:3L\\62c>3QY;3aC72V?2[F1A2TG2Bj,2Hm1N2Jg1P3Mb603R_;182Z>1:2T@2WF2Am,2Gp1M2Ik1P3Mg603Rc;172^>192W?2ZE,2@p1F2Bj2Io3QEe1M2Jb1Q3M]72b=182Z>,2]D1?2VE2Bn1I2Fk1M2Jg1Q3Ma62e<172]=,172U>2YE1B2UI2Fp1N2Jk1Q3Me503M\\6,2`<172Y>3_F:2TB2?n1F2Cj2Jo3QDc2Lh1R,3L_52c;172]=1:2XB1?2UF2Cn1I2Eg2Kk1P,2Lb3Rf;162a=1:2]B1?2ZF1B2TH2Dj2Jm,1O2Kf1Q3M`603Q\\;182Y?2;q1A2WH2Cm,2Hq1O2Ji1P3Me603Qa;182]>1:2WA2[G2Ap,1G2Bi2Im1P3Mi72I_3Qf;3N\\72Eh1:2Z?29o,1@2UF2Bm1I2Fh1M2Je1Q3N`72f?3PY92]>19,2U?2YF2Bq1I2Fm1M2Jj1Q3Nd603O]72`=,182X?4]F:o1B4WI=k1F4UNCi2Jn3REc3Mh503N`6,2c<182\\>1:2VA2?q1F2Cm1J2Fg2Lk1R3Mc5,2f<172`=1:2[A1?2XF2Cq1I2Ek2Kn1R,2Lf1R3N_62d>3PZ:3aC72W?2;p1B2WI2Dn1J,2De2Ki1Q3Mc603Q_:182\\?1;2VB2<m2Cq1I,2Dh2Jl1P3Mg603Qd;182`?1;2ZA2<p1B,2UH2Cl1I2Ef3Mm82Jc1Q3N_703QY:2]@1;2UA,2XG2Bp1I2Fk1M2Jh1Q3Nc703Q]92`?1:,2X@4\\G:n1B2VI2Fp1M2Jl1R3Ng603P`82d>,192[?1;2UA2>o1F2Ck1J2Gg3Mk603Oc70,3OZ82_>1:2YA1?2VF2Cp1J2Fj1M2Gc3Nf5,03O^72b>1:2^B1?4[G;n1C2VJ2Fn1L2Gf,3Mi503Nb603Q]:172Y?1<2UB2>m2Eq1K2Fi,2Kl1R3Mf603Qa:182^?1;2YB2>q1D2VJ,2Dl1J2Fe3Mj603Qg;3N]72c@3QX;2]A1=2VB,2YI2Co1J2Fi1M2Je1Q3Nb703R]:2aA1<2XA,2<n1C2UI2Fn1M2Jj1Q3Nf703Q`903RX:,2[@1<2TB4YJ>l1E4UNBi1J2Ge3Mk703Pc803Q[9,2^?1;2XB2>q1E2Cn1J2Gj1M2Ic3Of70,3P^82b?1;2\\A1>2XF1C2UJ2Fm1M2Hf3Ni6,03Oa703Q[:3aB72W>1<2TC2?m2Fq1L2Gi3Ml5,03Ne703Q_:172\\>1<2XB2?q1E2WL2Fl,1L2Gd3Ni603Qd:172a?1;2\\B1>2VD2>k,2Eo1K2Gh1M2Ic1Q3N`703R\\;3aC62U=2YC2>o,1D2TJ2Fl1M2Jh1Q3Ne703R`:162Y<2\\B,1=2TC4XJ=j2Fp1M2Jm3QFc3Ni803Qc:152\\;2_A,1<2WB2>o1E2Bl1J2Gh1N2Jc3Qg903R^:,2b@1;2[B1>2VE2Cq1J2Gl1N2Jf3Pj80,3Qa803RZ;2_B1>4[F:o1C4XK?k2Fp1M2Ii1O2Ia,3Pd703R^:172Y>1<2VC2?p1F2Ai2Hl1M,2Hd3Oh703Qb:172^>1<2[C1?2UE2Al2Go,1L2Hg3Nl82Ia3Qg;3M]72e@3RZ;3`C72T>2YD2@o1E,2TK2Gk1M2Jf1Q3Nb703R^;172Y=2\\D1>,2TD4XK>i2Fo1M2Jj1Q3Ng703Rb;172\\<2`C1=,2WC2?n1F4VNBi1J2Gf1N2Kb3Rf:162_;15,2V<2ZB1?2TE2Bn1J2Gk1N2Kf1Q2L^3Rb:,152Z;2^B1>2YE1B2UJ2Go1N2Ji1P2Kb3Qd9,03R];172X>1;2TC2@n1G2Bi2Im1O2Jd,3Ph803Ra:172\\>1;2YC1@2UF2Bl2Hp1N,2Ig3Ol82J`3Qe:172a>1;4^C7q1?2XF2Ao1G2UN,2Hj1N2Jd1Q3N`703R];182X>2]F1@2TF,2@j2Gn1M2Jq1Q3Ne703Ra;172\\>192T?,2WE2@m1F4TMAf2Im3QEc3Nj82J`3Rf;172_=182W>,2ZD2?q1F2Bl1I2Gj1N2Ke1R3M_62b<17,2Z=2]C1?2WE2Bq1I2Gn1N2Ki1Q3Mb52e;16,2]<172V>4[F:o1B4XK?l1G4UOCh2Jl1Q2Le3Rh:,152`;172Z>1;2WB2@q1G2Cl2Ip1P2K_".split(',')
@@ -187,71 +205,61 @@ class RabByungMonth(AbstractTyme):
                 m += 1
             y += 1
             m = 0
+        RabByungMonth._IS_INIT = True
 
-    def __init__(self, year: RabByungYear, month: int):
+    def __init__(self, year: int, month: int):
         RabByungMonth._init()
+        RabByungMonth.validate(year, month)
+        super().__init__(year, abs(month))
+        self._leap = month < 0
+
+    @staticmethod
+    def validate(year: int, month: int) -> None:
         if month == 0 or month > 12 or month < -12:
             raise ValueError(f'illegal rab-byung month: {month}')
-
-        y: int = year.get_year()
-        if y < 1950 or y > 2050:
-            raise ValueError(f'rab-byung year {y} must between 1950 and 2050')
-
-        m: int = abs(month)
-        if y == 1950 and m < 12:
-            raise ValueError(f'month {month} must be 12 in rab-byung year {y}')
-
+        if year < 1950 or year > 2050:
+            raise ValueError(f'rab-byung year {year} must between 1950 and 2050')
         leap: bool = month < 0
-        leap_month: int = year.get_leap_month()
-        if leap and m != leap_month:
-            raise ValueError(f'illegal leap month {m}  in rab-byung year {y}')
-
-        self.year = year
-        self.month = m
-        self.leap = leap
-
-        index: int = m - 1
-        if leap or (0 < leap_month < m):
-            index += 1
-        self.index_in_year = index
+        m: int = abs(month)
+        if year == 1950 and m < 12:
+            raise ValueError(f'month {month} must be 12 in rab-byung year {year}')
+        if leap and m != RabByungYear.from_year(year).get_leap_month():
+            raise ValueError(f'illegal leap month {m}  in rab-byung year {year}')
 
     @classmethod
     def from_ym(cls, year: int, month: int) -> RabByungMonth:
-        return cls(RabByungYear.from_year(year), month)
-
-    @classmethod
-    def from_element_zodiac(cls, rab_byung_index: int, element: RabByungElement, zodiac: Zodiac, month: int) -> RabByungMonth:
-        return cls(RabByungYear.from_element_zodiac(rab_byung_index, element, zodiac), month)
+        return cls(year, month)
 
     def get_rab_byung_year(self) -> RabByungYear:
-        return self.year
-
-    def get_year(self) -> int:
-        return self.year.get_year()
-
-    def get_month(self) -> int:
-        return self.month
+        return RabByungYear.from_year(self._year)
 
     def get_month_with_leap(self) -> int:
-        return -self.month if self.leap else self.month
+        return -self._month if self._leap else self._month
 
     def get_index_in_year(self) -> int:
-        return self.index_in_year
+        index: int = self._month - 1
+        if self._leap:
+            index += 1
+        else:
+            leap_month: int = self.get_rab_byung_year().get_leap_month()
+            if 0 < leap_month < self._month:
+                index += 1
+        return index
 
     def is_leap(self) -> bool:
-        return self.leap
+        return self._leap
 
     def get_name(self) -> str:
-        return ('闰' if self.leap else '') + self.NAMES[self.month - 1]
+        return ('闰' if self._leap else '') + self.NAMES[self._month - 1]
 
     def get_alias(self) -> str:
-        return ('闰' if self.leap else '') + self.ALIAS[self.month - 1]
+        return ('闰' if self._leap else '') + self.ALIAS[self._month - 1]
 
     def next(self, n: int) -> RabByungMonth:
         if n == 0:
             return RabByungMonth.from_ym(self.get_year(), self.get_month_with_leap())
-        m: int = self.index_in_year + 1 + n
-        y: RabByungYear = self.year
+        m: int = self.get_index_in_year() + 1 + n
+        y: RabByungYear = self.get_rab_byung_year()
         if n > 0:
             month_count: int = y.get_month_count()
             while m > month_count:
@@ -270,28 +278,29 @@ class RabByungMonth(AbstractTyme):
                 leap = True
             if m > leap_month:
                 m -= 1
-        return RabByungMonth(y, -m if leap else m)
+        return RabByungMonth(y.get_year(), -m if leap else m)
 
     def get_first_day(self) -> RabByungDay:
-        return RabByungDay(self, 1)
+        return RabByungDay(self._year, self.get_month_with_leap(), 1)
 
     def get_days(self) -> List[RabByungDay]:
         days: List[RabByungDay] = []
         miss_days: List[int] = self.get_miss_days()
         leap_days: List[int] = self.get_leap_days()
+        m: int = self.get_month_with_leap()
         for day in range(1, 31):
             if day in miss_days:
                 continue
-            days.append(RabByungDay(self, day))
+            days.append(RabByungDay(self._year, m, day))
             if day in leap_days:
-                days.append(RabByungDay(self, -day))
+                days.append(RabByungDay(self._year, m, -day))
         return days
 
     def get_day_count(self) -> int:
         return 30 + len(self.get_leap_days()) - len(self.get_miss_days())
 
     def get_special_days(self) -> List[int]:
-        return self.DAYS.get(self.get_year() * 13 + self.index_in_year, [])
+        return self.DAYS.get(self.get_year() * 13 + self.get_index_in_year(), [])
 
     def get_leap_days(self) -> List[int]:
         return [d for d in self.get_special_days() if d > 0]
@@ -300,37 +309,33 @@ class RabByungMonth(AbstractTyme):
         return [-d for d in self.get_special_days() if d < 0]
 
     def __str__(self) -> str:
-        return f'{self.year}{self.get_name()}'
+        return f'{self.get_rab_byung_year()}{self.get_name()}'
 
 
-class RabByungDay(AbstractTyme):
+class RabByungDay(DayUnit):
     """藏历日，仅支持藏历1950年十二月初一（公历1951年1月8日）至藏历2050年十二月三十（公历2051年2月11日）"""
     NAMES: List[str] = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']
 
-    def __init__(self, month: RabByungMonth, day: int):
+    def __init__(self, year: int, month: int, day: int):
+        RabByungDay.validate(year, month, day)
+        super().__init__(year, month, abs(day))
+        self._leap = day < 0
+
+    @staticmethod
+    def validate(year: int, month: int, day: int) -> None:
         if day == 0 or day < -30 or day > 30:
             raise ValueError(f'illegal day {day} in {month}')
-
-        d: int = abs(day)
+        m: RabByungMonth = RabByungMonth.from_ym(year, month)
         leap: bool = day < 0
-
-        # 验证日期的合法性
-        if leap and d not in month.get_leap_days():
-            raise ValueError(f'illegal leap day {d} in {month}')
-        elif not leap and d in month.get_miss_days():
-            raise ValueError(f'illegal day {d} in {month}')
-
-        self.month = month
-        self.day = d
-        self.leap = leap
+        d = abs(day)
+        if leap and d not in m.get_leap_days():
+            raise ValueError(f'illegal leap day {d} in {m}')
+        elif not leap and d in m.get_miss_days():
+            raise ValueError(f'illegal day {d} in {m}')
 
     @classmethod
     def from_ymd(cls, year: int, month: int, day: int) -> RabByungDay:
-        return cls(RabByungMonth.from_ym(year, month), day)
-
-    @classmethod
-    def from_element_zodiac(cls, rab_byung_index: int, element: RabByungElement, zodiac: Zodiac, month: int, day: int) -> RabByungDay:
-        return cls(RabByungMonth.from_element_zodiac(rab_byung_index, element, zodiac, month), day)
+        return cls(year, month, day)
 
     @classmethod
     def from_solar_day(cls, solar_day: SolarDay) -> RabByungDay:
@@ -353,28 +358,19 @@ class RabByungDay(AbstractTyme):
                     break
                 elif day > d + 1:
                     day -= 1
-        return RabByungDay(m, day)
+        return RabByungDay(m.get_year(), m.get_month_with_leap(), day)
 
     def get_rab_byung_month(self) -> RabByungMonth:
-        return self.month
-
-    def get_year(self) -> int:
-        return self.month.get_year()
-
-    def get_month(self) -> int:
-        return self.month.get_month_with_leap()
-
-    def get_day(self) -> int:
-        return self.day
+        return RabByungMonth.from_ym(self._year, self._month)
 
     def is_leap(self) -> bool:
-        return self.leap
+        return self._leap
 
     def get_day_with_leap(self) -> int:
-        return -self.day if self.leap else self.day
+        return -self._day if self._leap else self._day
 
     def get_name(self) -> str:
-        return ('闰' if self.leap else '') + self.NAMES[self.day - 1]
+        return ('闰' if self._leap else '') + self.NAMES[self._day - 1]
 
     def subtract(self, target: RabByungDay) -> int:
         return self.get_solar_day().subtract(target.get_solar_day())
@@ -382,14 +378,15 @@ class RabByungDay(AbstractTyme):
     def get_solar_day(self) -> SolarDay:
         from tyme4py.solar import SolarDay
         month: RabByungMonth = RabByungMonth.from_ym(1950, 12)
+        cm: RabByungMonth = self.get_rab_byung_month()
         total_days: int = 0
 
         # 计算从1950年12月到当前月的总天数
-        while not month == self.month:
+        while month != cm:
             total_days += month.get_day_count()
             month = month.next(1)
 
-        day_num: int = self.day
+        day_num: int = self._day
         for d in month.get_special_days():
             if d < 0:
                 if day_num > -d:
@@ -398,7 +395,7 @@ class RabByungDay(AbstractTyme):
                 if day_num > d:
                     day_num += 1
 
-        if self.leap:
+        if self._leap:
             day_num += 1
 
         return SolarDay.from_ymd(1951, 1, 7).next(total_days + day_num)
@@ -407,4 +404,4 @@ class RabByungDay(AbstractTyme):
         return self.get_solar_day().next(n).get_rab_byung_day()
 
     def __str__(self) -> str:
-        return f'{self.month}{self.get_name()}'
+        return f'{self.get_rab_byung_month()}{self.get_name()}'
