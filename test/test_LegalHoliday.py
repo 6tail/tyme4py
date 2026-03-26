@@ -25,7 +25,7 @@ class TestLegalHoliday(unittest.TestCase):
     def test3(self):
         d = LegalHoliday.from_ymd(2001, 12, 29)
         assert d is not None
-        assert d.__str__(), '2001年12月29日 元旦节(班)'
+        assert d.__str__(), '2001年12月29日 元旦(班)'
         assert d.next(-1) is None
 
     def test4(self):

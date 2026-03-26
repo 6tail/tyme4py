@@ -136,14 +136,14 @@ class LunarFestival(AbstractTyme):
 
 
 class SolarFestival(AbstractTyme):
-    """公历现代节日有：元旦、三八妇女节、植树节、五一劳动节、五四青年节、六一儿童节、建党节、八一建军节、教师节、国庆节。"""
-    NAMES: List[str] = ['元旦', '三八妇女节', '植树节', '五一劳动节', '五四青年节', '六一儿童节', '建党节', '八一建军节', '教师节', '国庆节']
+    """公历现代节日"""
+    NAMES: List[str] = ['元旦', '妇女节', '植树节', '劳动节', '青年节', '儿童节', '建党节', '建军节', '教师节', '国庆节']
     DATA: str = '@00001011950@01003081950@02003121979@03005011950@04005041950@05006011950@06007011941@07008011933@08009101985@09010011950'
 
     def __init__(self, festival_type: FestivalType, day: SolarDay, start_year: int, data: str):
         """
         通过公历日 SolarDay得到
-        :param festival_type:   节日类型
+        :param festival_type: 节日类型
         :param day: 农历日
         :param start_year: 开始年份
         :param data:

@@ -34,9 +34,7 @@ class Event(AbstractCulture):
     def from_name(cls, name: str) -> Union[Event, None]:
         pattern: re.Pattern[str] = re.compile(f'{EventManager.REGEX}{name}')
         matcher: Union[re.Match[str], None] = pattern.search(EventManager.DATA)
-        if not matcher:
-            return None
-        return cls(name, matcher.group(1))
+        return cls(name, matcher.group(1)) if matcher else None
 
     def get_type(self) -> EventType:
         """事件类型"""

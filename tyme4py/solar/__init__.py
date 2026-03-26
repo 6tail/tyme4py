@@ -571,9 +571,7 @@ class SolarDay(DayUnit):
             return None
         if not self.is_before(d2):
             return DogDay(Dog.from_index(2), self.subtract(d2))
-        if not self.is_before(d1):
-            return DogDay(Dog.from_index(1), self.subtract(d1))
-        return DogDay(Dog.from_index(0), self.subtract(d0))
+        return DogDay(Dog.from_index(0), self.subtract(d0)) if self.is_before(d1) else DogDay(Dog.from_index(1), self.subtract(d1))
 
     def get_plum_rain_day(self) -> Union[PlumRainDay, None]:
         """

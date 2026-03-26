@@ -330,7 +330,7 @@ class RabByungDay(DayUnit):
         d = abs(day)
         if leap and d not in m.get_leap_days():
             raise ValueError(f'illegal leap day {d} in {m}')
-        elif not leap and d in m.get_miss_days():
+        if not leap and d in m.get_miss_days():
             raise ValueError(f'illegal day {d} in {m}')
 
     @classmethod

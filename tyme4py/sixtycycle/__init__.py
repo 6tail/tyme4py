@@ -721,11 +721,9 @@ class SixtyCycleDay(AbstractTyme):
         n: SolarDay = next_winter_solstice.next(next_winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
         if d.is_before(w):
             return NineStar.from_index(w.subtract(d) - 1)
-        elif d.is_before(s):
+        if d.is_before(s):
             return NineStar.from_index(d.subtract(w))
-        elif d.is_before(n):
-            return NineStar.from_index(n.subtract(d) - 1)
-        return NineStar.from_index(d.subtract(n))
+        return NineStar.from_index(n.subtract(d) - 1 if d.is_before(n) else d.subtract(n))
 
     def get_jupiter_direction(self) -> Direction:
         """
