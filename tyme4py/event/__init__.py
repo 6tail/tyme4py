@@ -36,9 +36,23 @@ class Event(AbstractCulture):
         matcher: Union[re.Match[str], None] = pattern.search(EventManager.DATA)
         return cls(name, matcher.group(1)) if matcher else None
 
+    def _get_char_index(self, index: int) -> int:
+        return EventManager.CHARS.index(self._data[index])
+
+    def get_value(self, index: int) -> int:
+        return self._get_char_index(index) - 31
+
+    def get_month(self, year: int) -> List[int]:
+        y: int = year
+        m: int = self.get_value(2)
+        if m > 12:
+            m = 1
+            y += 1
+        return [y, m]
+
     def get_type(self) -> EventType:
         """事件类型"""
-        n: int = EventManager.CHARS.index(self._data[1])
+        n: int = self._get_char_index(1)
         if n == 1:
             return EventType.SOLAR_WEEK
         if n == 2:
@@ -64,7 +78,7 @@ class Event(AbstractCulture):
         n: int = 0
         size: int = len(EventManager.CHARS)
         for i in range(0, 3):
-            n = n * size + EventManager.CHARS.index(self._data[6 + i])
+            n = n * size + self._get_char_index(6 + i)
         return n
 
     def get_solar_day(self, year: int) -> Union[SolarDay, None]:
@@ -86,20 +100,17 @@ class Event(AbstractCulture):
             d = self._get_solar_day_by_term_earth_branch(year)
         if d is None:
             return None
-        offset: int = EventManager.CHARS.index(self._data[5]) - 31
+        offset: int = self.get_value(5)
         return d if 0 == offset else d.next(offset)
 
     def _get_solar_day_by_solar_day(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.solar import SolarMonth, SolarDay
-        y: int = year
-        m: int = EventManager.CHARS.index(self._data[2]) - 31
-        if m > 12:
-            m = 1
-            y += 1
-        d: int = EventManager.CHARS.index(self._data[3]) - 31
-        delay: int = EventManager.CHARS.index(self._data[4]) - 31
-        month: SolarMonth = SolarMonth.from_ym(y, m)
-        last_day: int = month.get_day_count()
+        month: List[int] = self.get_month(year)
+        y: int = month[0]
+        m: int = month[1]
+        d: int = self.get_value(3)
+        delay: int = self.get_value(4)
+        last_day: int = SolarMonth.from_ym(y, m).get_day_count()
         if d > last_day:
             if 0 == delay:
                 return None
@@ -110,15 +121,12 @@ class Event(AbstractCulture):
 
     def _get_solar_day_by_lunar_day(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.lunar import LunarMonth, LunarDay
-        y: int = year
-        m: int = EventManager.CHARS.index(self._data[2]) - 31
-        if m > 12:
-            m = 1
-            y += 1
-        d: int = EventManager.CHARS.index(self._data[3]) - 31
-        delay: int = EventManager.CHARS.index(self._data[4]) - 31
-        month: LunarMonth = LunarMonth.from_ym(y, m)
-        last_day: int = month.get_day_count()
+        month: List[int] = self.get_month(year)
+        y: int = month[0]
+        m: int = month[1]
+        d: int = self.get_value(3)
+        delay: int = self.get_value(4)
+        last_day: int = LunarMonth.from_ym(y, m).get_day_count()
         if d > last_day:
             if 0 == delay:
                 return None
@@ -130,12 +138,12 @@ class Event(AbstractCulture):
     def _get_solar_day_by_week(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.solar import SolarMonth, SolarDay
         # 第几个星期
-        n: int = EventManager.CHARS.index(self._data[3]) - 31
+        n: int = self.get_value(3)
         if n == 0:
             return None
-        m: SolarMonth = SolarMonth.from_ym(year, EventManager.CHARS.index(self._data[2]) - 31)
+        m: SolarMonth = SolarMonth.from_ym(year, self.get_value(2))
         # 星期几
-        w: int = EventManager.CHARS.index(self._data[4]) - 31
+        w: int = self.get_value(4)
         if n > 0:
             # 当月第1天
             d: SolarDay = m.get_first_day()
@@ -149,19 +157,19 @@ class Event(AbstractCulture):
 
     def _get_solar_day_by_term(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.solar import SolarTerm, SolarDay
-        offset: int = EventManager.CHARS.index(self._data[4]) - 31
-        d: SolarDay = SolarTerm.from_index(year, EventManager.CHARS.index(self._data[2]) - 31).get_solar_day()
+        d: SolarDay = SolarTerm.from_index(year, self.get_value(2)).get_solar_day()
+        offset: int = self.get_value(4)
         return d if 0 == offset else d.next(offset)
 
     def _get_solar_day_by_term_heaven_stem(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.solar import SolarDay
         d: SolarDay = self._get_solar_day_by_term(year)
-        return d.next(d.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(EventManager.CHARS.index(self._data[3]) - 31))
+        return d.next(d.get_lunar_day().get_sixty_cycle().get_heaven_stem().steps_to(self.get_value(3)))
 
     def _get_solar_day_by_term_earth_branch(self, year: int) -> Union[SolarDay, None]:
         from tyme4py.solar import SolarDay
         d: SolarDay = self._get_solar_day_by_term(year)
-        return d.next(d.get_lunar_day().get_sixty_cycle().get_earth_branch().steps_to(EventManager.CHARS.index(self._data[3]) - 31))
+        return d.next(d.get_lunar_day().get_sixty_cycle().get_earth_branch().steps_to(self.get_value(3)))
 
     @classmethod
     def from_solar_day(cls, d: SolarDay) -> List[Event]:
@@ -198,6 +206,14 @@ class EventBuilder:
         return self
 
     @staticmethod
+    def _get_char(index: int) -> str:
+        return EventManager.CHARS[index]
+
+    def _set_value(self, index: int, n: int) -> EventBuilder:
+        self._data[index] = self._get_char(31 + n)
+        return self
+
+    @staticmethod
     def encode_type(t: EventType) -> str:
         n: int = 0
         if t == EventType.SOLAR_WEEK:
@@ -210,14 +226,11 @@ class EventBuilder:
             n = 4
         elif t == EventType.TERM_EB:
             n = 5
-        return EventManager.CHARS[n]
+        return EventBuilder._get_char(n)
 
     def _content(self, t: EventType, a: int, b: int, c: int) -> EventBuilder:
         self._data[1] = self.encode_type(t)
-        self._data[2] = EventManager.CHARS[31 + a]
-        self._data[3] = EventManager.CHARS[31 + b]
-        self._data[4] = EventManager.CHARS[31 + c]
-        return self
+        return self._set_value(2, a)._set_value(3, b)._set_value(4, c)
 
     def solar_day(self, solar_month: int, solar_day: int, delay_days: int) -> EventBuilder:
         """
@@ -287,7 +300,7 @@ class EventBuilder:
         size: int = len(EventManager.CHARS)
         n: int = year
         for i in range(3):
-            self._data[8 - i] = EventManager.CHARS[n % size]
+            self._data[8 - i] = self._get_char(n % size)
             n //= size
         return self
 
@@ -297,8 +310,7 @@ class EventBuilder:
         :param days: 天数（最远支持-31至31天）
         :return: 事件构造器
         """
-        self._data[5] = EventManager.CHARS[31 + days]
-        return self
+        return self._set_value(5, days)
 
     def build(self) -> Event:
         """

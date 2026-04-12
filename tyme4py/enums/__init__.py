@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import warnings
 from enum import Enum
 
 
@@ -28,6 +29,7 @@ class Gender(Enum):
 
 class FestivalType(Enum):
     """节日类型：DAY=0=日期，TERM=1=节气，EVE=2=除夕"""
+    warnings.warn('FestivalType is deprecated.', DeprecationWarning)
     DAY = 0
     """日期"""
     TERM = 1

@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import unittest
+from typing import List
 
 from tyme4py.eightchar import EightChar, ChildLimit, Fortune, DecadeFortune
 from tyme4py.eightchar.provider.impl import China95ChildLimitProvider, LunarSect2EightCharProvider, DefaultEightCharProvider, DefaultChildLimitProvider, LunarSect1ChildLimitProvider, LunarSect2ChildLimitProvider
@@ -180,23 +181,23 @@ class TestEightChar(unittest.TestCase):
         # 童限结束(即开始起运)的农历年干支
         assert child_limit.get_end_time().get_lunar_hour().get_lunar_day().get_lunar_month().get_lunar_year().get_sixty_cycle().get_name() == '己巳'
         # 第1轮大运
-        decadeFortune: DecadeFortune = child_limit.get_start_decade_fortune()
+        decade_fortune: DecadeFortune = child_limit.get_start_decade_fortune()
         # 开始年龄
-        assert decadeFortune.get_start_age() == 7
+        assert decade_fortune.get_start_age() == 7
         # 结束年龄
-        assert decadeFortune.get_end_age() == 16
+        assert decade_fortune.get_end_age() == 16
         # 开始年
-        assert decadeFortune.get_start_sixty_cycle_year().get_year() == 1989
+        assert decade_fortune.get_start_sixty_cycle_year().get_year() == 1989
         # 结束年
-        assert decadeFortune.get_end_sixty_cycle_year().get_year() == 1998
+        assert decade_fortune.get_end_sixty_cycle_year().get_year() == 1998
         # 干支
-        assert decadeFortune.get_name() == '乙卯'
+        assert decade_fortune.get_name() == '乙卯'
         # 下一大运
-        assert decadeFortune.next(1).get_name() == '丙辰'
+        assert decade_fortune.next(1).get_name() == '丙辰'
         # 上一大运
-        assert decadeFortune.next(-1).get_name() == '甲寅'
+        assert decade_fortune.next(-1).get_name() == '甲寅'
         # 第9轮大运
-        assert decadeFortune.next(8).get_name() == '癸亥'
+        assert decade_fortune.next(8).get_name() == '癸亥'
         # 小运
         fortune: Fortune = child_limit.get_start_fortune()
         # 年龄
@@ -226,19 +227,19 @@ class TestEightChar(unittest.TestCase):
         # 童限结束(即开始起运)的农历年干支
         assert child_limit.get_end_time().get_lunar_hour().get_lunar_day().get_lunar_month().get_lunar_year().get_sixty_cycle().get_name() == '辛巳'
         # 第1轮大运
-        decadeFortune: DecadeFortune = child_limit.get_start_decade_fortune()
+        decade_fortune: DecadeFortune = child_limit.get_start_decade_fortune()
         # 开始年龄
-        assert decadeFortune.get_start_age() == 10
+        assert decade_fortune.get_start_age() == 10
         # 结束年龄
-        assert decadeFortune.get_end_age() == 19
+        assert decade_fortune.get_end_age() == 19
         # 开始年
-        assert decadeFortune.get_start_sixty_cycle_year().get_year() == 2001
+        assert decade_fortune.get_start_sixty_cycle_year().get_year() == 2001
         # 结束年
-        assert decadeFortune.get_end_sixty_cycle_year().get_year() == 2010
+        assert decade_fortune.get_end_sixty_cycle_year().get_year() == 2010
         # 干支
-        assert decadeFortune.get_name() == '庚子'
+        assert decade_fortune.get_name() == '庚子'
         # 下一大运
-        assert decadeFortune.next(1).get_name() == '己亥'
+        assert decade_fortune.next(1).get_name() == '己亥'
         # 小运
         fortune: Fortune = child_limit.get_start_fortune()
         # 年龄
@@ -348,7 +349,7 @@ class TestEightChar(unittest.TestCase):
     def test46(self):
         LunarHour.provider = LunarSect2EightCharProvider()
         eight_char: EightChar = EightChar(SixtyCycle('壬寅'), SixtyCycle('丙午'), SixtyCycle('己亥'), SixtyCycle('丙子'))
-        time_list: [str] = []
+        time_list: List[str] = []
         aa = eight_char.get_solar_times(1900, 2024)
         for time in aa:
             time_list.append(time.__str__())
@@ -416,7 +417,7 @@ class TestEightChar(unittest.TestCase):
 
     def test51(self):
         eight_char: EightChar = EightChar('壬申', '壬寅', '庚辰', '甲申')
-        time_list: [str] = []
+        time_list: List[str] = []
         aa = eight_char.get_solar_times(1801, 2099)
         for time in aa:
             time_list.append(time.__str__())

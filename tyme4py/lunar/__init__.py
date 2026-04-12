@@ -427,8 +427,6 @@ class LunarWeek(WeekUnit):
     农历周
     农历一个月最多有6个周，分别为：第一周、第二周、第三周、第四周、第五周、第六周。
     """
-    NAMES: List[str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
-    """名称"""
 
     @staticmethod
     def validate(year: int, month: int, index: int, start: int) -> None:
@@ -540,7 +538,7 @@ class LunarDay(DayUnit):
 
     def get_name(self) -> str:
         """
-        :return:农历日名，'初一'
+        :return: 农历日名，如：初一
         """
         return self.NAMES[self._day - 1]
 
@@ -553,7 +551,7 @@ class LunarDay(DayUnit):
     def is_before(self, target: LunarDay) -> bool:
         """
         是否在指定农历日之前
-        :param target:农历日 LunarDay
+        :param target: 农历日 LunarDay
         :return: true/false
         """
         y: int = target.get_year()
@@ -568,7 +566,7 @@ class LunarDay(DayUnit):
     def is_after(self, target: LunarDay) -> bool:
         """
         是否在指定农历日之后
-        :param target:农历日 LunarDay
+        :param target: 农历日 LunarDay
         :return:
         """
         y: int = target.get_year()
@@ -628,20 +626,7 @@ class LunarDay(DayUnit):
         """
         :return: 九星 NineStar
         """
-        from tyme4py.solar import SolarTerm
-        d: SolarDay = self.get_solar_day()
-        y: int = d.get_year()
-        winter_solstice: SolarDay = SolarTerm.from_index(y, 0).get_solar_day()
-        summer_solstice: SolarDay = SolarTerm.from_index(y, 12).get_solar_day()
-        next_winter_solstice: SolarDay = SolarTerm.from_index(y + 1, 0).get_solar_day()
-        w: SolarDay = winter_solstice.next(winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        s: SolarDay = summer_solstice.next(summer_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        n: SolarDay = next_winter_solstice.next(next_winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        if d.is_before(w):
-            return NineStar.from_index(w.subtract(d) - 1)
-        if d.is_before(s):
-            return NineStar.from_index(d.subtract(w))
-        return NineStar.from_index(n.subtract(d) - 1 if d.is_before(n) else d.subtract(n))
+        return self.get_solar_day().get_nine_star()
 
     def get_jupiter_direction(self) -> Direction:
         """

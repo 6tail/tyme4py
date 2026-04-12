@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import unittest
+from typing import List
 
 from tyme4py.sixtycycle import ThreePillars
 from tyme4py.solar import SolarDay
@@ -8,7 +9,7 @@ from tyme4py.solar import SolarDay
 class TestThreePillars(unittest.TestCase):
     def test(self):
         t: ThreePillars = ThreePillars('甲戌', '甲戌', '甲戌')
-        day_list: [str] = []
+        day_list: List[str] = []
         for d in t.get_solar_days(1, 2200):
             day_list.append(d.__str__())
         assert day_list == [

@@ -365,7 +365,8 @@ class ChildLimit:
         from tyme4py.sixtycycle import SixtyCycleYear
         return SixtyCycleYear.from_year(self.get_end_time().get_year())
 
-    def get_start_age(self) -> int:
+    @staticmethod
+    def get_start_age() -> int:
         """
         开始年龄
         :return: 数字

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import re
 from pathlib import Path
 
-# Read version from tyme4py/__init__.py
+# Read version from __init__.py
 def get_version():
     init_file = Path(__file__).parent / 'tyme4py' / '__init__.py'
     content = init_file.read_text(encoding='utf-8')

@@ -31,6 +31,8 @@ class NineStar(LoopTyme):
     """九星"""
     NAMES: List[str] = ['一', '二', '三', '四', '五', '六', '七', '八', '九']
     """名称"""
+    COLORS: List[str] = ['白', '黑', '碧', '绿', '黄', '白', '赤', '白', '紫']
+    """颜色"""
 
     def __init__(self, index_or_name: Union[int, str]):
         super().__init__(self.NAMES, index_or_name)
@@ -51,14 +53,14 @@ class NineStar(LoopTyme):
         颜色
         :return: 颜色
         """
-        return ['白', '黑', '碧', '绿', '黄', '白', '赤', '白', '紫'][self.get_index()]
+        return self.COLORS[self.get_index()]
 
     def get_element(self) -> Element:
         """
         五行
         :return: 五行
         """
-        return Element([4, 2, 0, 0, 2, 3, 3, 2, 1][self.get_index()])
+        return self.get_direction().get_element()
 
     def get_dipper(self) -> Dipper:
         """

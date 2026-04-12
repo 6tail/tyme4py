@@ -10,6 +10,7 @@ from tyme4py.culture.dog import DogDay, Dog
 from tyme4py.culture.nine import NineDay, Nine
 from tyme4py.culture.phenology import PhenologyDay, Phenology
 from tyme4py.culture.plumrain import PlumRainDay, PlumRain
+from tyme4py.culture.star.nine import NineStar
 from tyme4py.enums import HideHeavenStemType
 from tyme4py.event import Event
 from tyme4py.unit import YearUnit, MonthUnit, WeekUnit, DayUnit, SecondUnit
@@ -337,7 +338,6 @@ class SolarMonth(MonthUnit):
 
 class SolarWeek(WeekUnit):
     """公历周"""
-    NAMES: List[str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
 
     @staticmethod
     def validate(year: int, month: int, index: int, start: int) -> None:
@@ -716,6 +716,23 @@ class SolarDay(DayUnit):
         :return: 月相 Phase
         """
         return self.get_phase_day().get_phase()
+
+    def get_nine_star(self) -> NineStar:
+        """
+        :return: 九星 NineStar
+        """
+        y: int = self.get_year()
+        winter_solstice: SolarDay = SolarTerm.from_index(y, 0).get_solar_day()
+        summer_solstice: SolarDay = SolarTerm.from_index(y, 12).get_solar_day()
+        next_winter_solstice: SolarDay = SolarTerm.from_index(y + 1, 0).get_solar_day()
+        w: SolarDay = winter_solstice.next(winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        s: SolarDay = summer_solstice.next(summer_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        n: SolarDay = next_winter_solstice.next(next_winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
+        if self.is_before(w):
+            return NineStar.from_index(w.subtract(self) - 1)
+        if self.is_before(s):
+            return NineStar.from_index(self.subtract(w))
+        return NineStar.from_index(n.subtract(self) - 1 if self.is_before(n) else self.subtract(n))
 
 
 class SolarTime(SecondUnit):

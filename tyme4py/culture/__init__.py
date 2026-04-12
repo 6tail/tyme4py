@@ -148,8 +148,8 @@ class Element(LoopTyme):
     NAMES: List[str] = ['木', '火', '土', '金', '水']
     """名称"""
 
-    def __init__(self, index_or_name: Union[int, str]):
-        super().__init__(self.NAMES, index_or_name)
+    def __init__(self, index_or_name: Union[int, str], names: Union[List[str], None] = None):
+        super().__init__(self.NAMES if names is None else names, index_or_name)
 
     @classmethod
     def from_name(cls, name: str) -> Element:

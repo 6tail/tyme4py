@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import unittest
+from typing import List
 
 from tyme4py.culture import God
 from tyme4py.lunar import LunarDay
@@ -9,12 +10,12 @@ from tyme4py.solar import SolarDay
 class TestGod(unittest.TestCase):
     def test0(self):
         lunar: LunarDay = SolarDay(2004, 2, 16).get_lunar_day()
-        gods: [God] = lunar.get_gods()
-        ji: [str] = []
+        gods: List[God] = lunar.get_gods()
+        ji: List[str] = []
         for god in gods:
             if '吉' == god.get_luck().get_name():
                 ji.append(god.get_name())
-        xiong: [str] = []
+        xiong: List[str] = []
         for god in gods:
             if '凶' == god.get_luck().get_name():
                 xiong.append(god.get_name())
@@ -23,12 +24,12 @@ class TestGod(unittest.TestCase):
 
     def test1(self):
         lunar: LunarDay = SolarDay(2029, 11, 16).get_lunar_day()
-        gods: [God] = lunar.get_gods()
-        ji: [str] = []
+        gods: List[God] = lunar.get_gods()
+        ji: List[str] = []
         for god in gods:
             if '吉' == god.get_luck().get_name():
                 ji.append(god.get_name())
-        xiong: [str] = []
+        xiong: List[str] = []
         for god in gods:
             if '凶' == god.get_luck().get_name():
                 xiong.append(god.get_name())
@@ -37,12 +38,12 @@ class TestGod(unittest.TestCase):
 
     def test2(self):
         lunar: LunarDay = SolarDay(1954, 7, 16).get_lunar_day()
-        gods: [God] = lunar.get_gods()
-        ji: [str] = []
+        gods: List[God] = lunar.get_gods()
+        ji: List[str] = []
         for god in gods:
             if '吉' == god.get_luck().get_name():
                 ji.append(god.get_name())
-        xiong: [str] = []
+        xiong: List[str] = []
         for god in gods:
             if '凶' == god.get_luck().get_name():
                 xiong.append(god.get_name())
@@ -51,12 +52,12 @@ class TestGod(unittest.TestCase):
 
     def test3(self):
         lunar: LunarDay = SolarDay(2024, 12, 27).get_lunar_day()
-        gods: [God] = lunar.get_gods()
-        ji: [str] = []
+        gods: List[God] = lunar.get_gods()
+        ji: List[str] = []
         for god in gods:
             if '吉' == god.get_luck().get_name():
                 ji.append(god.get_name())
-        xiong: [str] = []
+        xiong: List[str] = []
         for god in gods:
             if '凶' == god.get_luck().get_name():
                 xiong.append(god.get_name())

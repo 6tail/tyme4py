@@ -15,18 +15,18 @@ class TestSolarTerm(unittest.TestCase):
         assert dong_zhi.get_solar_day().__str__() == '2022年12月22日'
 
         # 冬至顺推23次，就是大雪 2023 - 12 - 07 17: 32:55
-        daXue = dong_zhi.next(23)
-        assert daXue.get_name() == '大雪'
-        assert daXue.get_index() == 23
-        assert daXue.get_julian_day().get_solar_day().__str__() == '2023年12月7日'
-        assert daXue.get_solar_day().__str__() == '2023年12月7日'
+        da_xue = dong_zhi.next(23)
+        assert da_xue.get_name() == '大雪'
+        assert da_xue.get_index() == 23
+        assert da_xue.get_julian_day().get_solar_day().__str__() == '2023年12月7日'
+        assert da_xue.get_solar_day().__str__() == '2023年12月7日'
 
         # 冬至逆推2次，就是上一年的小雪 2022 - 11 - 22 16: 20:28
-        xiaoXue = dong_zhi.next(-2)
-        assert xiaoXue.get_name() == '小雪'
-        assert xiaoXue.get_index() == 22
-        assert xiaoXue.get_julian_day().get_solar_day().__str__() == '2022年11月22日'
-        assert xiaoXue.get_solar_day().__str__() == '2022年11月22日'
+        xiao_xue = dong_zhi.next(-2)
+        assert xiao_xue.get_name() == '小雪'
+        assert xiao_xue.get_index() == 22
+        assert xiao_xue.get_julian_day().get_solar_day().__str__() == '2022年11月22日'
+        assert xiao_xue.get_solar_day().__str__() == '2022年11月22日'
 
         # 冬至顺推24次，就是下一个冬至 2023 - 12 - 22 11: 27:20
         dong_zhi2 = dong_zhi.next(24)

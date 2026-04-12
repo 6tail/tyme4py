@@ -710,20 +710,7 @@ class SixtyCycleDay(AbstractTyme):
         九星
         :return: 九星 NineStar
         """
-        from tyme4py.solar import SolarDay, SolarTerm
-        d: SolarDay = self._solar_day
-        y: int = d.get_year()
-        winter_solstice: SolarDay = SolarTerm.from_index(y, 0).get_solar_day()
-        summer_solstice: SolarDay = SolarTerm.from_index(y, 12).get_solar_day()
-        next_winter_solstice: SolarDay = SolarTerm.from_index(y + 1, 0).get_solar_day()
-        w: SolarDay = winter_solstice.next(winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        s: SolarDay = summer_solstice.next(summer_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        n: SolarDay = next_winter_solstice.next(next_winter_solstice.get_lunar_day().get_sixty_cycle().steps_close_to(0))
-        if d.is_before(w):
-            return NineStar.from_index(w.subtract(d) - 1)
-        if d.is_before(s):
-            return NineStar.from_index(d.subtract(w))
-        return NineStar.from_index(n.subtract(d) - 1 if d.is_before(n) else d.subtract(n))
+        return self._solar_day.get_nine_star()
 
     def get_jupiter_direction(self) -> Direction:
         """

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Union, List, Dict
 
 from tyme4py import AbstractTyme
 from tyme4py.culture import Element, Zodiac
+from tyme4py.lunar import LunarMonth
 from tyme4py.unit import MonthUnit, DayUnit
 
 if TYPE_CHECKING:
@@ -14,8 +15,12 @@ if TYPE_CHECKING:
 
 class RabByungElement(Element):
     """藏历五行"""
+
+    NAMES: List[str] = ['木', '火', '土', '铁', '水']
+    """名称"""
+
     def __init__(self, index_or_name: Union[int, str]):
-        super().__init__(index_or_name if isinstance(index_or_name, int) else index_or_name.replace('铁', '金'))
+        super().__init__(index_or_name, self.NAMES)
 
     @classmethod
     def from_index(cls, index: int) -> RabByungElement:
@@ -26,7 +31,7 @@ class RabByungElement(Element):
         return cls(name)
 
     def next(self, n: int) -> RabByungElement:
-        return RabByungElement.from_index(self.next_index(n))
+        return RabByungElement(self.next_index(n))
 
     def get_reinforce(self) -> RabByungElement:
         """我生者"""
@@ -43,9 +48,6 @@ class RabByungElement(Element):
     def get_restrained(self) -> RabByungElement:
         """克我者"""
         return self.next(-2)
-
-    def __str__(self) -> str:
-        return super().__str__().replace('金', '铁')
 
 
 class RabByungYear(AbstractTyme):
@@ -179,7 +181,6 @@ class RabByungYear(AbstractTyme):
 
 class RabByungMonth(MonthUnit):
     """藏历月，仅支持藏历1950年十二月至藏历2050年十二月"""
-    NAMES = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
     ALIAS = ['神变月', '苦行月', '具香月', '萨嘎月', '作净月', '明净月', '具醉月', '具贤月', '天降月', '持众月', '庄严月', '满意月']
     DAYS: Dict[int, List[int]] = {}
     _IS_INIT: bool = False
@@ -250,7 +251,7 @@ class RabByungMonth(MonthUnit):
         return self._leap
 
     def get_name(self) -> str:
-        return ('闰' if self._leap else '') + self.NAMES[self._month - 1]
+        return ('闰' if self._leap else '') + LunarMonth.NAMES[self._month - 1]
 
     def get_alias(self) -> str:
         return ('闰' if self._leap else '') + self.ALIAS[self._month - 1]

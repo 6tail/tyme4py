@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import List
 
 from tyme4py import AbstractTyme
 
@@ -68,6 +69,9 @@ class SecondUnit(DayUnit, ABC):
 
 class WeekUnit(MonthUnit, ABC):
     """周"""
+
+    NAMES: List[str] = ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周']
+    """名称"""
 
     def __init__(self, year: int, month: int, index: int, start: int):
         super().__init__(year, month)
