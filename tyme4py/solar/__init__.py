@@ -23,11 +23,12 @@ if TYPE_CHECKING:
     from tyme4py.lunar import LunarDay, LunarMonth, LunarHour
     from tyme4py.sixtycycle import HideHeavenStemDay, SixtyCycleDay, SixtyCycleHour
     from tyme4py.rabbyung import RabByungYear, RabByungDay
+    from tyme4py.hijri import HijriDay
 
 
 class SolarTerm(LoopTyme):
     """节气"""
-    NAMES = ['冬至', '小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪']
+    NAMES: List[str] = ['冬至', '小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪']
     """名称"""
 
     def __init__(self, year: int, index_or_name: Union[int, str]):
@@ -195,7 +196,7 @@ class SolarHalfYear(YearUnit):
 
 class SolarSeason(YearUnit):
     """公历季度"""
-    NAMES = ['一季度', '二季度', '三季度', '四季度']
+    NAMES: List[str] = ['一季度', '二季度', '三季度', '四季度']
 
     @staticmethod
     def validate(year: int, index: int) -> None:
@@ -304,8 +305,8 @@ class SolarMonth(MonthUnit):
         return f'{self.get_solar_year()}{self.get_name()}'
 
     def next(self, n: int) -> SolarMonth:
-        i = self._month - 1 + n
-        return SolarMonth.from_ym((self._year * 12 + i) // 12, self.index_of(i, 12) + 1)
+        i: int = self._month - 1 + n
+        return SolarMonth((self._year * 12 + i) // 12, self.index_of(i, 12) + 1)
 
     def get_weeks(self, start: int) -> List[SolarWeek]:
         """
@@ -470,8 +471,9 @@ class SolarDay(DayUnit):
         """
         :return: 星座 Constellation
         """
-        y: int = self._month * 100 + self._day
-        return Constellation.from_index(9 if y > 1221 or y < 120 else 10 if y < 219 else 11 if y < 321 else 0 if y < 420 else 1 if y < 521 else 2 if y < 622 else 3 if y < 723 else 4 if y < 823 else 5 if y < 923 else 6 if y < 1024 else 7 if y < 1123 else 8)
+        m: int = self._month - 1
+        offset: int = 1 if self._day > [19, 18, 20, 19, 20, 21, 22, 22, 22, 23, 22, 21][m] else 0
+        return Constellation.from_index(9 + m + offset)
 
     def get_name(self) -> str:
         return self.NAMES[self._day - 1]
@@ -733,6 +735,20 @@ class SolarDay(DayUnit):
         if self.is_before(s):
             return NineStar.from_index(self.subtract(w))
         return NineStar.from_index(n.subtract(self) - 1 if self.is_before(n) else self.subtract(n))
+
+    def get_hijri_day(self) -> HijriDay:
+        """
+        :return: 回历 HijriDay
+        """
+        d: int = self.subtract(SolarDay(622, 7, 16))
+        z = d // 10631
+        d -= z * 10631
+        y = int(floor((d + 0.5) / 354.366))
+        d -= int(floor(y * 354.366 + 0.5))
+        m = int(floor((d + 0.11) / 29.51))
+        d -= int(floor(m * 29.5 + 0.5))
+        from tyme4py.hijri import HijriDay
+        return HijriDay(z * 30 + y + 1, m + 1, d + 1)
 
 
 class SolarTime(SecondUnit):

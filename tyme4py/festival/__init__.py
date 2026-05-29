@@ -1,12 +1,11 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
-import warnings
 from abc import abstractmethod
 from typing import TYPE_CHECKING, List, Union
 
 from tyme4py import AbstractTyme, Tyme
-from tyme4py.enums import FestivalType, EventType
+from tyme4py.enums import EventType
 from tyme4py.event import Event
 from tyme4py.unit import DayUnit
 
@@ -20,8 +19,7 @@ class AbstractFestival(AbstractTyme):
     def next(self, n: int) -> Union[Tyme, None]:
         pass
 
-    def __init__(self, festival_type: FestivalType, index: int, event: Event, day: DayUnit):
-        self._type = festival_type
+    def __init__(self, index: int, event: Event, day: DayUnit):
         self._index = index
         self._event = event
         self._day = day
@@ -41,13 +39,6 @@ class AbstractFestival(AbstractTyme):
         """
         return self._day
 
-    def get_type(self) -> FestivalType:
-        """
-        :return: 节日类型
-        """
-        warnings.warn('get_type() is deprecated.', DeprecationWarning)
-        return self._type
-
     def __str__(self) -> str:
         return f'{self._day} {self.get_name()}'
 
@@ -60,15 +51,14 @@ class LunarFestival(AbstractFestival):
     """名称"""
     DATA: str = '2VV__0002Vj__0002WW__0002XX__0003b___0002ZZ__0002bb__0002bj__0002cj__0002dd__0003s___0002gc__0002hV_U000'
 
-    def __init__(self, festival_type: FestivalType, index: int, event: Event, day: LunarDay):
+    def __init__(self, index: int, event: Event, day: LunarDay):
         """
         实例化
-        :param festival_type: 节日类型
         :param index: 索引
         :param event: 事件
         :param day: 农历日
         """
-        super().__init__(festival_type, index, event, day)
+        super().__init__(index, event, day)
 
     @classmethod
     def from_index(cls, year: int, index: int) -> Union[LunarFestival, None]:
@@ -89,9 +79,9 @@ class LunarFestival(AbstractFestival):
             m: List[int] = e.get_month(year)
             d: LunarDay = LunarDay.from_ymd(m[0], m[1], e.get_value(3))
             offset: int = e.get_value(5)
-            return LunarFestival(FestivalType.DAY, index, e, d if offset == 0 else d.next(offset))
+            return LunarFestival(index, e, d if offset == 0 else d.next(offset))
         elif t == EventType.TERM_DAY:
-            return LunarFestival(FestivalType.TERM, index, e, SolarTerm.from_index(year, e.get_value(2)).get_solar_day().get_lunar_day())
+            return LunarFestival(index, e, SolarTerm.from_index(year, e.get_value(2)).get_solar_day().get_lunar_day())
         return None
 
     @classmethod
@@ -114,16 +104,16 @@ class LunarFestival(AbstractFestival):
                 offset: int = e.get_value(5)
                 if offset == 0:
                     if d.get_month() == e.get_value(2) and d.get_day() == e.get_value(3):
-                      return LunarFestival(FestivalType.DAY, i, e, d)
+                      return LunarFestival(i, e, d)
                 else:
                     m: List[int] = e.get_month(d.get_year())
                     n: LunarDay = d.next(-offset)
                     if n.get_year() == m[0] and n.get_month() == m[1] and n.get_day() == e.get_value(3):
-                        return LunarFestival(FestivalType.DAY, i, e, d)
+                        return LunarFestival(i, e, d)
             elif t == EventType.TERM_DAY:
                 term: SolarTermDay = d.get_solar_day().get_term_day()
                 if term.get_day_index() == 0 and term.get_solar_term().get_index() == e.get_value(2) % 24:
-                    return LunarFestival(FestivalType.TERM, i, e, d)
+                    return LunarFestival(i, e, d)
         return None
 
     def get_day(self) -> LunarDay:
@@ -152,15 +142,14 @@ class SolarFestival(AbstractFestival):
     NAMES: List[str] = ['元旦', '妇女节', '植树节', '劳动节', '青年节', '儿童节', '建党节', '建军节', '教师节', '国庆节']
     DATA: str = '0VV__0Ux0Xc__0Ux0Xg__0_Q0ZV__0Ux0ZY__0Ux0aV__0Ux0bV__0Uo0cV__0Ug0de__0_V0eV__0Ux'
 
-    def __init__(self, festival_type: FestivalType, index: int, event: Event, day: SolarDay):
+    def __init__(self, index: int, event: Event, day: SolarDay):
         """
         实例化
-        :param festival_type: 节日类型
         :param index: 索引
         :param event: 事件
         :param day: 公历日
         """
-        super().__init__(festival_type, index, event, day)
+        super().__init__(index, event, day)
 
     @classmethod
     def from_index(cls, year: int, index: int) -> Union[SolarFestival, None]:
@@ -177,7 +166,7 @@ class SolarFestival(AbstractFestival):
         if year < e.get_start_year():
             return None
         from tyme4py.solar import SolarDay
-        return SolarFestival(FestivalType.DAY, index, e, SolarDay.from_ymd(year, e.get_value(2), e.get_value(3)))
+        return SolarFestival(index, e, SolarDay.from_ymd(year, e.get_value(2), e.get_value(3)))
 
     @classmethod
     def from_ymd(cls, year: int, month: int, day: int) -> Union[SolarFestival, None]:
@@ -194,7 +183,7 @@ class SolarFestival(AbstractFestival):
             start: int = i * 8
             e: Event = Event(SolarFestival.NAMES[i], '@' + SolarFestival.DATA[start: start + 8])
             if d.get_year() >= e.get_start_year() and d.get_month() == e.get_value(2) and d.get_day() == e.get_value(3):
-                return SolarFestival(FestivalType.DAY, i, e, d)
+                return SolarFestival(i, e, d)
         return None
 
     def get_day(self) -> SolarDay:

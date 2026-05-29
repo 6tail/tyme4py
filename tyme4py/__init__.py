@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Union, List
 
-__version__ = '1.4.7'
+__version__ = '1.5.0'
 
 
 class Culture(ABC):

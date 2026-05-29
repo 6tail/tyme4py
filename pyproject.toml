@@ -9,8 +9,8 @@ requires-python = ">=3.10"
 readme = "README.md"
 license-files = ["LICENSE"]
 authors = [{name = "6tail", email = "6tail@6tail.cn"}]
-keywords = ["公历", "农历", "藏历", "儒略日", "星座", "干支", "节气", "法定假日"]
-description = "Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、星座、干支、生肖、节气、法定假日等。"
+keywords = ["公历", "农历", "藏历", "回历", "儒略日", "星座", "干支", "节气", "月相", "法定假日"]
+description = "Tyme是一个非常强大的日历工具库，可以看作 Lunar 的升级版，拥有更优的设计和扩展性，支持公历、农历、藏历、回历、星座、干支、生肖、节气、月相、法定假日等。"
 
 [tool.setuptools]
 include-package-data = true
