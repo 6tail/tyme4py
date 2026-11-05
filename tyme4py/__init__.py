@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Union, List
 
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 
 
 class Culture(ABC):
@@ -52,6 +52,18 @@ class AbstractCulture(Culture):
         """
         i: int = index % size
         return i + size if i < 0 else i
+
+    @staticmethod
+    def validate_range(val: int, min_val: int, max_val: int, field: str) -> None:
+        """
+        校验值是否在指定范围内
+        :param val: 待校验的值
+        :param min_val: 最小值（含）
+        :param max_val: 最大值（含）
+        :param field: 字段名称，用于异常提示
+        """
+        if val < min_val or val > max_val:
+            raise ValueError(f'illegal {field}: {val}')
 
 
 class AbstractTyme(AbstractCulture, Tyme):

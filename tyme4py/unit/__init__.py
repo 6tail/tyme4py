@@ -1,10 +1,10 @@
 # -*- coding:utf-8 -*-
 from __future__ import annotations
 
-from abc import ABC
-from typing import List
+from abc import ABC, abstractmethod
+from typing import List, Union
 
-from tyme4py import AbstractTyme
+from tyme4py import AbstractTyme, AbstractCulture
 
 
 class YearUnit(AbstractTyme, ABC):
@@ -15,6 +15,10 @@ class YearUnit(AbstractTyme, ABC):
 
     def get_year(self) -> int:
         return self._year
+
+    def get_compare_index(self) -> int:
+        """用于比较大小的索引"""
+        return self._year * 10000
 
 
 class MonthUnit(YearUnit, ABC):
@@ -27,6 +31,9 @@ class MonthUnit(YearUnit, ABC):
     def get_month(self) -> int:
         return self._month
 
+    def get_compare_index(self) -> int:
+        return super().get_compare_index() + (self._month * 2 if self._month > 0 else 1 - self._month * 2) * 100
+
 
 class DayUnit(MonthUnit, ABC):
     """日"""
@@ -37,6 +44,9 @@ class DayUnit(MonthUnit, ABC):
 
     def get_day(self) -> int:
         return self._day
+
+    def get_compare_index(self) -> int:
+        return super().get_compare_index() + self._day
 
 
 class SecondUnit(DayUnit, ABC):
@@ -57,14 +67,18 @@ class SecondUnit(DayUnit, ABC):
     def get_second(self) -> int:
         return self._second
 
+    def get_seconds_in_day(self) -> int:
+        """当天秒数"""
+        return self._hour * 3600 + self._minute * 60 + self._second
+
+    def get_compare_index(self) -> int:
+        return super().get_compare_index() * 86400 + self.get_seconds_in_day()
+
     @staticmethod
     def validate(year: int, month: int, day: int, hour: int, minute: int, second: int) -> None:
-        if hour < 0 or hour > 23:
-            raise ValueError(f'illegal hour: {hour}')
-        if minute < 0 or minute > 59:
-            raise ValueError(f'illegal minute: {minute}')
-        if second < 0 or second > 59:
-            raise ValueError(f'illegal second: {second}')
+        AbstractCulture.validate_range(hour, 0, 23, 'hour')
+        AbstractCulture.validate_range(minute, 0, 59, 'minute')
+        AbstractCulture.validate_range(second, 0, 59, 'second')
 
 
 class WeekUnit(MonthUnit, ABC):
@@ -86,7 +100,33 @@ class WeekUnit(MonthUnit, ABC):
 
     @staticmethod
     def validate(year: int, month: int, index: int, start: int) -> None:
-        if index < 0 or index > 5:
-            raise ValueError(f'illegal week index: {index}')
-        if start < 0 or start > 6:
-            raise ValueError(f'illegal week start: {start}')
+        AbstractCulture.validate_range(index, 0, 5, 'week index')
+        AbstractCulture.validate_range(start, 0, 6, 'week start')
+
+
+class AbstractYear(YearUnit, ABC):
+    """抽象年"""
+
+    def __init__(self, year: int):
+        super().__init__(year)
+
+    def get_leap_month(self) -> int:
+        """
+        闰月
+        :return: 闰月数字，1代表闰1月，0代表无闰月
+        """
+        return 0
+
+    def get_month_count(self) -> int:
+        """
+        月数
+        :return: 月数
+        """
+        return 12 if self.get_leap_month() < 1 else 13
+
+    def get_name(self) -> str:
+        return f"{self._year}年"
+
+    @abstractmethod
+    def next(self, n: int) -> Union[AbstractYear, None]:
+        pass
